@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArtifactCard } from "@/components/ArtifactCard";
+import { SignInButton } from "@/components/SignInButton";
 
 interface Artifact {
   id: string;
@@ -42,21 +43,24 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-medium tracking-tight text-ink">
               Artifact Hub
             </h1>
             <p className="text-sm text-ink-faint">
-              Browse and share AI-generated content
+              Your AI-generated artifacts
             </p>
           </div>
-          <Link
-            href="/artifacts/new"
-            className="px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors shadow-[0_0_0_1px_var(--color-accent-ring)]"
-          >
-            Publish
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/artifacts/new"
+              className="px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors"
+            >
+              Publish
+            </Link>
+            <SignInButton />
+          </div>
         </div>
       </header>
 

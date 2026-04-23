@@ -10,25 +10,31 @@ interface ShareDialogProps {
 export function ShareDialog({ artifactId, onClose }: ShareDialogProps) {
   const [expiresInHours, setExpiresInHours] = useState(48);
   const [maxViews, setMaxViews] = useState<number | "">("");
-  const [createdBy, setCreatedBy] = useState("");
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleCreate() {
-    if (!createdBy.trim()) return;
     setCreating(true);
+    setError(null);
 
     const res = await fetch("/api/share", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         artifactId,
-        createdBy: createdBy.trim(),
         expiresInHours,
         maxViews: maxViews || undefined,
       }),
     });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error || "Could not create share link");
+      setCreating(false);
+      return;
+    }
 
     const data = await res.json();
     setShareUrl(data.shareUrl);
@@ -52,6 +58,12 @@ export function ShareDialog({ artifactId, onClose }: ShareDialogProps) {
         <h2 className="text-lg font-display font-medium text-ink mb-4">
           Share Artifact
         </h2>
+
+        {error && (
+          <div className="mb-3 p-3 bg-bad/10 border border-bad/40 rounded-lg text-sm text-bad">
+            {error}
+          </div>
+        )}
 
         {shareUrl ? (
           <div className="space-y-4">
@@ -80,14 +92,6 @@ export function ShareDialog({ artifactId, onClose }: ShareDialogProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            <input
-              type="text"
-              placeholder="Your email"
-              value={createdBy}
-              onChange={(e) => setCreatedBy(e.target.value)}
-              className={inputClass}
-              required
-            />
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-ink-faint mb-1 block">
@@ -124,7 +128,7 @@ export function ShareDialog({ artifactId, onClose }: ShareDialogProps) {
             <div className="flex gap-2">
               <button
                 onClick={handleCreate}
-                disabled={creating || !createdBy.trim()}
+                disabled={creating}
                 className="flex-1 px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors disabled:opacity-50"
               >
                 {creating ? "Creating..." : "Create Link"}

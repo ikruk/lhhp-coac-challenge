@@ -48,8 +48,13 @@ function buildMcpServer(): McpServer {
       if (description) formData.append("description", description);
       if (tags && tags.length > 0) formData.append("tags", tags.join(","));
 
+      const apiKey = process.env.ARTIFACT_HUB_API_KEY;
+      const headers: Record<string, string> = {};
+      if (apiKey) headers["x-api-key"] = apiKey;
+
       const res = await fetch(`${BASE_URL}/api/artifacts`, {
         method: "POST",
+        headers,
         body: formData,
       });
 

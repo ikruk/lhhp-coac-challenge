@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { artifacts } from "@/db/schema";
-import { desc, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, or, sql, SQL } from "drizzle-orm";
 import { saveFile, getArtifactType } from "@/lib/storage";
 import { generateTags, generateDescription } from "@/lib/ai";
+import { auth } from "@/auth";
 
-// GET /api/artifacts — list/search artifacts
+function hasValidApiKey(req: NextRequest): boolean {
+  const key = req.headers.get("x-api-key");
+  return !!key && key === process.env.ARTIFACT_HUB_API_KEY;
+}
+
 export async function GET(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  const ownerEmail = session.user.email;
+
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search");
   const tag = searchParams.get("tag");
@@ -14,23 +25,22 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "20");
   const offset = (page - 1) * limit;
 
-  let query = db.select().from(artifacts);
-
-  const conditions = [];
+  const conditions: SQL[] = [eq(artifacts.authorEmail, ownerEmail)];
   if (search) {
-    conditions.push(
-      or(
-        ilike(artifacts.title, `%${search}%`),
-        ilike(artifacts.description, `%${search}%`)
-      )
+    const s = or(
+      ilike(artifacts.title, `%${search}%`),
+      ilike(artifacts.description, `%${search}%`)
     );
+    if (s) conditions.push(s);
   }
   if (tag) {
     conditions.push(sql`${tag} = ANY(${artifacts.tags})`);
   }
 
-  const results = await query
-    .where(conditions.length > 0 ? conditions[0] : undefined)
+  const results = await db
+    .select()
+    .from(artifacts)
+    .where(and(...conditions))
     .orderBy(desc(artifacts.createdAt))
     .limit(limit)
     .offset(offset);
@@ -38,14 +48,23 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ artifacts: results, page, limit });
 }
 
-// POST /api/artifacts — upload a new artifact
 export async function POST(req: NextRequest) {
+  const apiKeyAuthed = hasValidApiKey(req);
+  const session = apiKeyAuthed ? null : await auth();
+
+  if (!apiKeyAuthed && !session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   const title = formData.get("title") as string;
   const description = formData.get("description") as string | null;
-  const authorEmail = formData.get("authorEmail") as string;
   const tagsRaw = formData.get("tags") as string | null;
+
+  const authorEmail = apiKeyAuthed
+    ? (formData.get("authorEmail") as string | null)
+    : session!.user!.email!;
 
   if (!file || !title || !authorEmail) {
     return NextResponse.json(
@@ -60,7 +79,6 @@ export async function POST(req: NextRequest) {
 
   const { filePath, fileName } = await saveFile(buffer, file.name, mimeType);
 
-  // Parse or auto-generate tags
   let tags: string[] = [];
   if (tagsRaw) {
     tags = tagsRaw.split(",").map((t) => t.trim().toLowerCase()).filter(Boolean);
@@ -75,7 +93,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Auto-generate description if not provided
   let desc = description;
   if (!desc) {
     try {

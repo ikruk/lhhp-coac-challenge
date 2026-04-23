@@ -1,20 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createShareLink } from "@/lib/share";
+import { db } from "@/db";
+import { artifacts } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { auth } from "@/auth";
 
-// POST /api/share — create a share link
 export async function POST(req: NextRequest) {
-  const { artifactId, createdBy, expiresInHours, maxViews } = await req.json();
+  const session = await auth();
+  if (!session?.user?.email) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  if (!artifactId || !createdBy) {
+  const { artifactId, expiresInHours, maxViews } = await req.json();
+
+  if (!artifactId) {
     return NextResponse.json(
-      { error: "artifactId and createdBy are required" },
+      { error: "artifactId is required" },
       { status: 400 }
     );
   }
 
+  const [artifact] = await db
+    .select({ authorEmail: artifacts.authorEmail })
+    .from(artifacts)
+    .where(eq(artifacts.id, artifactId))
+    .limit(1);
+
+  if (!artifact || artifact.authorEmail !== session.user.email) {
+    return NextResponse.json({ error: "Artifact not found" }, { status: 404 });
+  }
+
   const { token, expiresAt } = await createShareLink({
     artifactId,
-    createdBy,
+    createdBy: session.user.email,
     expiresInHours,
     maxViews,
   });

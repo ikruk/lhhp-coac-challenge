@@ -8,7 +8,6 @@ export function UploadForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [authorEmail, setAuthorEmail] = useState("");
   const [tags, setTags] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -16,7 +15,7 @@ export function UploadForm() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!file || !title || !authorEmail) return;
+    if (!file || !title) return;
 
     setUploading(true);
     setError(null);
@@ -24,7 +23,6 @@ export function UploadForm() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("title", title);
-    formData.append("authorEmail", authorEmail);
     if (description) formData.append("description", description);
     if (tags) formData.append("tags", tags);
 
@@ -139,23 +137,9 @@ export function UploadForm() {
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-ink-muted mb-1">
-          Your Email *
-        </label>
-        <input
-          type="email"
-          value={authorEmail}
-          onChange={(e) => setAuthorEmail(e.target.value)}
-          placeholder="you@epam.com"
-          className={inputClass}
-          required
-        />
-      </div>
-
       <button
         type="submit"
-        disabled={uploading || !file || !title || !authorEmail}
+        disabled={uploading || !file || !title}
         className="w-full px-4 py-2.5 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {uploading
