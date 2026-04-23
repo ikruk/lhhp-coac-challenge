@@ -366,7 +366,7 @@
         <p>See <code>WRITEUP.md</code> § Walkthrough for a 9-step demo script.</p>
       </div>
     </div>
-    <p class="muted" style="margin-top: 1.6rem;">Navigate with <span class="kbd">←</span> <span class="kbd">→</span> · jump to first/last with <span class="kbd">Home</span> / <span class="kbd">End</span>.</p>
+    <p class="muted" style="margin-top: 1.6rem;">Navigate with <span class="kbd">←</span> <span class="kbd">→</span>, scroll / two-finger swipe on a trackpad, or jump to first/last with <span class="kbd">Home</span> / <span class="kbd">End</span>.</p>
   </section>
 
 </div>
@@ -402,6 +402,43 @@
     const half = window.innerWidth / 2;
     show(e.clientX > half ? i + 1 : i - 1);
   });
+
+  // Trackpad / mouse-wheel navigation — one swipe or notch advances one slide.
+  // Threshold filters out tiny inertia tails; cooldown makes a single gesture
+  // trigger exactly one transition even though the browser fires many events.
+  const WHEEL_THRESHOLD = 30;
+  const WHEEL_COOLDOWN_MS = 650;
+  let wheelLocked = false;
+  let wheelIdleTimer;
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (wheelLocked) return;
+
+    const dx = e.deltaX;
+    const dy = e.deltaY;
+    const delta = Math.abs(dx) > Math.abs(dy) ? dx : dy;
+    if (Math.abs(delta) < WHEEL_THRESHOLD) return;
+
+    show(delta > 0 ? i + 1 : i - 1);
+    wheelLocked = true;
+    clearTimeout(wheelIdleTimer);
+    wheelIdleTimer = setTimeout(() => { wheelLocked = false; }, WHEEL_COOLDOWN_MS);
+  }, { passive: false });
+
+  // Touch swipe for tablets / phones.
+  let touchStartX = 0;
+  let touchStartY = 0;
+  document.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) < 40 && Math.abs(dy) < 40) return;
+    const delta = Math.abs(dx) > Math.abs(dy) ? -dx : -dy;
+    show(delta > 0 ? i + 1 : i - 1);
+  }, { passive: true });
 
   const initial = parseInt(location.hash.slice(1), 10);
   show(Number.isFinite(initial) && initial > 0 ? initial - 1 : 0);
