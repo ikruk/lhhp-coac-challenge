@@ -4,10 +4,9 @@ import express from "express";
 import cors from "cors";
 import { z } from "zod";
 import { db } from "../db/index.js";
-import { artifacts, feedback, shareLinks } from "../db/schema.js";
+import { artifacts, feedback } from "../db/schema.js";
 import { eq, desc, ilike, or, sql } from "drizzle-orm";
-import { saveContent, getArtifactType } from "../lib/storage.js";
-import { generateTags, generateDescription, summarizeFeedback } from "../lib/ai.js";
+import { summarizeFeedback } from "../lib/ai.js";
 import { createShareLink } from "../lib/share.js";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -34,30 +33,48 @@ server.tool(
     tags: z.array(z.string()).optional().describe("Optional tags — AI will generate them if omitted"),
   },
   async ({ title, content, mimeType, authorEmail, description, tags }) => {
-    const { filePath, fileName, fileSize } = await saveContent(content, title, mimeType);
-    const artifactType = getArtifactType(mimeType);
+    const extMap: Record<string, string> = {
+      "text/html": ".html",
+      "text/markdown": ".md",
+      "text/plain": ".txt",
+    };
+    const filename = `${title.replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 50)}${
+      extMap[mimeType] || ""
+    }`;
 
-    let finalTags = tags || [];
-    if (finalTags.length === 0) {
-      try { finalTags = await generateTags(content, title); } catch { finalTags = []; }
+    const formData = new FormData();
+    formData.append("file", new Blob([content], { type: mimeType }), filename);
+    formData.append("title", title);
+    formData.append("authorEmail", authorEmail);
+    if (description) formData.append("description", description);
+    if (tags && tags.length > 0) formData.append("tags", tags.join(","));
+
+    const res = await fetch(`${BASE_URL}/api/artifacts`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `Publish failed (${res.status}): ${body}`,
+          },
+        ],
+      };
     }
 
-    let finalDesc = description || null;
-    if (!finalDesc) {
-      try { finalDesc = await generateDescription(content, title); } catch { finalDesc = null; }
-    }
-
-    const [artifact] = await db.insert(artifacts).values({
-      title,
-      description: finalDesc,
-      type: artifactType,
-      filePath,
-      fileName,
-      fileSize,
-      mimeType,
-      tags: finalTags,
-      authorEmail,
-    }).returning();
+    const { artifact } = (await res.json()) as {
+      artifact: {
+        id: string;
+        title: string;
+        type: string;
+        tags: string[];
+        description: string | null;
+      };
+    };
 
     return {
       content: [
