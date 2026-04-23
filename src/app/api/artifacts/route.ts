@@ -5,6 +5,11 @@ import { and, desc, eq, ilike, or, sql, SQL } from "drizzle-orm";
 import { saveFile, getArtifactType } from "@/lib/storage";
 import { generateTags, generateDescription } from "@/lib/ai";
 import { auth } from "@/auth";
+import {
+  MAX_FILE_SIZE_BYTES,
+  validateUploadedFile,
+} from "@/lib/file-validation";
+import { scanBufferWithVirusTotal } from "@/lib/virus-scan";
 
 function hasValidApiKey(req: NextRequest): boolean {
   const key = req.headers.get("x-api-key");
@@ -73,10 +78,37 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  if (file.size > MAX_FILE_SIZE_BYTES) {
+    return NextResponse.json(
+      {
+        error: `File exceeds the 10 MB limit (${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(2)} MB).`,
+      },
+      { status: 413 }
+    );
+  }
+
   const buffer = Buffer.from(await file.arrayBuffer());
   const mimeType = file.type || "application/octet-stream";
-  const artifactType = getArtifactType(mimeType);
 
+  const validation = validateUploadedFile(buffer, mimeType);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  const scan = await scanBufferWithVirusTotal(buffer, file.name);
+  if (scan.scanned && !scan.clean) {
+    return NextResponse.json(
+      {
+        error: `File blocked by virus scan: ${scan.malicious} malicious / ${scan.suspicious} suspicious detections.`,
+      },
+      { status: 400 }
+    );
+  }
+
+  const artifactType = getArtifactType(mimeType);
   const { filePath, fileName } = await saveFile(buffer, file.name, mimeType);
 
   let tags: string[] = [];

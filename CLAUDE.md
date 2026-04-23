@@ -24,6 +24,8 @@ Shared modules:
 - `src/db/index.ts` — lazy Drizzle singleton over `postgres-js`. The exported `db` is a Proxy; the connection is created on first property access. `postgres` is configured with `{ prepare: false }`.
 - `src/lib/ai.ts` — Anthropic SDK (`new Anthropic()` reads `ANTHROPIC_API_KEY`). Generates artifact tags, descriptions, and feedback summaries. Failures are swallowed at call sites so AI outages don't block publish/upload.
 - `src/lib/storage.ts` — local filesystem storage at `UPLOAD_DIR` (default `./uploads`). Only a generated uuid filename is persisted in the DB; original filename is kept separately.
+- `src/lib/file-validation.ts` — runs on every upload before the file hits disk. Enforces the 10 MB size cap, MIME allowlist, magic-byte match against declared MIME (rejects renamed executables), PE/ELF/Mach-O header block, and the EICAR test-string block.
+- `src/lib/virus-scan.ts` — optional VirusTotal integration. When `VIRUSTOTAL_API_KEY` is set, each upload is posted to VirusTotal's `/files` endpoint and the verdict polled for up to 15 s; any `malicious`/`suspicious` count rejects. No-key / timeout falls through silently — file-validation remains authoritative.
 - `src/lib/share.ts` — nanoid(21) share tokens; `validateShareToken` both checks TTL + `max_views` cap and increments `view_count` on each valid hit.
 
 ## Data model
@@ -55,7 +57,7 @@ The initial migration `drizzle/0000_tense_randall_flagg.sql` is **baselined** �
 
 ## Environment
 
-See `.env` (gitignored). Required: `DATABASE_URL`, `ANTHROPIC_API_KEY`. Optional: `NEXT_PUBLIC_BASE_URL` (share-link base; falls back to request origin in Next, `http://localhost:3000` in MCP), `UPLOAD_DIR`, `MCP_PORT`.
+See `.env` (gitignored). Required: `DATABASE_URL`, `ANTHROPIC_API_KEY`, `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `ARTIFACT_HUB_API_KEY` (MCP ↔ web bridge). Optional: `NEXT_PUBLIC_BASE_URL`, `AUTH_URL`, `UPLOAD_DIR`, `MCP_PORT`, `VIRUSTOTAL_API_KEY` (enables VT scan of uploads).
 
 ## Deployment (Render)
 

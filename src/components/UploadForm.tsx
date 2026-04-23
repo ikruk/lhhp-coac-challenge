@@ -3,6 +3,8 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export function UploadForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -12,6 +14,21 @@ export function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function handleFileChange(selected: File | null) {
+    setError(null);
+    if (selected && selected.size > MAX_FILE_SIZE_BYTES) {
+      setError(
+        `File is ${(selected.size / (1024 * 1024)).toFixed(
+          2
+        )} MB — max is 10 MB.`
+      );
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
+    setFile(selected);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,7 +103,7 @@ export function UploadForm() {
             ref={fileInputRef}
             type="file"
             accept=".html,.htm,.png,.jpg,.jpeg,.gif,.webp,.svg,.pdf,.txt,.md"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
             className="hidden"
           />
         </div>

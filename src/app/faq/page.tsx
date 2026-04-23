@@ -59,6 +59,50 @@ const faqs: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
+    q: "What checks run on my uploads?",
+    a: (
+      <>
+        Every upload passes through three layers before it's stored:
+        <ol className="mt-3 space-y-2 list-decimal pl-5">
+          <li>
+            <strong className="text-ink">Size cap of 10 MB.</strong> Enforced
+            in the browser (so you don't wait for a doomed upload) and again
+            on the server (so nobody bypasses the browser check).
+          </li>
+          <li>
+            <strong className="text-ink">Type + signature check.</strong> Only
+            the MIME types listed above are accepted. The file's magic bytes
+            are compared against the declared MIME, so a{" "}
+            <code className="font-mono">.exe</code> renamed to{" "}
+            <code className="font-mono">.png</code> is rejected. Windows
+            (PE), Linux (ELF), and macOS (Mach-O) executable headers are
+            always blocked. The{" "}
+            <a
+              href="https://en.wikipedia.org/wiki/EICAR_test_file"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:underline"
+            >
+              EICAR
+            </a>{" "}
+            antivirus test string is rejected so you can smoke-test the
+            pipeline.
+          </li>
+          <li>
+            <strong className="text-ink">VirusTotal scan</strong> (when the{" "}
+            <code className="font-mono">VIRUSTOTAL_API_KEY</code> env var is
+            set). The file is uploaded to VirusTotal, analyzed by 60+
+            antivirus engines, and the result is awaited for up to 15
+            seconds. Anything with even one malicious or suspicious verdict
+            is rejected. If the scan times out or the key isn't configured,
+            the upload still proceeds on the layers above — VT is an added
+            defense, not the only one.
+          </li>
+        </ol>
+      </>
+    ),
+  },
+  {
     q: "Where do the tags and description come from?",
     a: (
       <>
