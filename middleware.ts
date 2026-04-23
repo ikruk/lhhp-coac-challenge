@@ -30,8 +30,9 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  const apiKey = req.headers.get("x-api-key");
-  if (apiKey && apiKey === process.env.ARTIFACT_HUB_API_KEY) {
+  // Let requests carrying an x-api-key through — the route handler resolves
+  // the token against the DB (can't do DB lookups from Edge middleware).
+  if (req.headers.get("x-api-key")) {
     return NextResponse.next();
   }
 

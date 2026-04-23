@@ -4,24 +4,18 @@ import { artifacts } from "@/db/schema";
 import { and, desc, eq, ilike, or, sql, SQL } from "drizzle-orm";
 import { saveFile, getArtifactType } from "@/lib/storage";
 import { generateTags, generateDescription } from "@/lib/ai";
-import { auth } from "@/auth";
+import { getAuthedUser } from "@/lib/auth-helpers";
 import {
   MAX_FILE_SIZE_BYTES,
   validateUploadedFile,
 } from "@/lib/file-validation";
 import { scanBufferWithVirusTotal } from "@/lib/virus-scan";
 
-function hasValidApiKey(req: NextRequest): boolean {
-  const key = req.headers.get("x-api-key");
-  return !!key && key === process.env.ARTIFACT_HUB_API_KEY;
-}
-
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const authed = await getAuthedUser(req);
+  if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const ownerEmail = session.user.email;
 
   const { searchParams } = new URL(req.url);
   const search = searchParams.get("search");
@@ -30,7 +24,7 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "20");
   const offset = (page - 1) * limit;
 
-  const conditions: SQL[] = [eq(artifacts.authorEmail, ownerEmail)];
+  const conditions: SQL[] = [eq(artifacts.authorEmail, authed.email)];
   if (search) {
     const s = or(
       ilike(artifacts.title, `%${search}%`),
@@ -54,10 +48,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const apiKeyAuthed = hasValidApiKey(req);
-  const session = apiKeyAuthed ? null : await auth();
-
-  if (!apiKeyAuthed && !session?.user?.email) {
+  const authed = await getAuthedUser(req);
+  if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -67,13 +59,9 @@ export async function POST(req: NextRequest) {
   const description = formData.get("description") as string | null;
   const tagsRaw = formData.get("tags") as string | null;
 
-  const authorEmail = apiKeyAuthed
-    ? (formData.get("authorEmail") as string | null)
-    : session!.user!.email!;
-
-  if (!file || !title || !authorEmail) {
+  if (!file || !title) {
     return NextResponse.json(
-      { error: "file, title, and authorEmail are required" },
+      { error: "file and title are required" },
       { status: 400 }
     );
   }
@@ -148,7 +136,7 @@ export async function POST(req: NextRequest) {
       fileSize: buffer.length,
       mimeType,
       tags,
-      authorEmail,
+      authorEmail: authed.email,
     })
     .returning();
 

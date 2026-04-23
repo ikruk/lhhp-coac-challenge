@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 
 export function SignInButton() {
@@ -35,6 +36,12 @@ export function SignInButton() {
         <span className="text-sm text-ink">{session.user.name}</span>
         <span className="text-xs text-ink-faint">{session.user.email}</span>
       </div>
+      <Link
+        href="/settings/tokens"
+        className="px-3 py-1.5 border border-edge bg-panel-raised/50 text-ink-muted hover:text-ink hover:bg-panel-raised text-sm rounded-lg transition-colors"
+      >
+        Tokens
+      </Link>
       <button
         onClick={() => signOut()}
         className="px-3 py-1.5 border border-edge bg-panel-raised/50 text-ink-muted hover:text-ink hover:bg-panel-raised text-sm rounded-lg transition-colors"

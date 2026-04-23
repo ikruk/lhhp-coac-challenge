@@ -152,10 +152,51 @@ const faqs: { q: string; a: React.ReactNode }[] = [
         <code className="font-mono">add_feedback</code>,{" "}
         <code className="font-mono">summarize_feedback</code>,{" "}
         <code className="font-mono">create_share_link</code>, and{" "}
-        <code className="font-mono">list_my_artifacts</code> as MCP tools. Add
-        the URL to your Claude Desktop config and pass your Google email as{" "}
-        <code className="font-mono">authorEmail</code> so the artifact lands in
-        your web gallery.
+        <code className="font-mono">list_my_artifacts</code> as MCP tools.
+        Generate a personal access token at{" "}
+        <a
+          href="/settings/tokens"
+          className="text-accent hover:underline"
+        >
+          Settings → Access tokens
+        </a>
+        , paste it once into Claude Desktop&apos;s config under{" "}
+        <code className="font-mono">headers.x-api-key</code>, and every tool
+        call is automatically attributed to your Google account — no
+        per-call email argument needed.
+      </>
+    ),
+  },
+  {
+    q: "How do access tokens work?",
+    a: (
+      <>
+        Visit{" "}
+        <a
+          href="/settings/tokens"
+          className="text-accent hover:underline"
+        >
+          Settings → Access tokens
+        </a>{" "}
+        while signed in, click{" "}
+        <strong className="text-ink">Generate token</strong>, and copy the
+        raw value (it&apos;s shown once). Paste it into Claude Desktop&apos;s
+        config:
+        <pre className="mt-3 p-3 bg-panel-raised border border-edge rounded-lg text-xs font-mono overflow-x-auto">
+{`{
+  "mcpServers": {
+    "artifact-hub": {
+      "url": "https://artifact-hub-mcp.onrender.com/mcp",
+      "headers": { "x-api-key": "ak_…" }
+    }
+  }
+}`}
+        </pre>
+        The token&apos;s SHA-256 hash is stored server-side; the raw value
+        can&apos;t be recovered if you lose it. You can have multiple tokens
+        (one per device/client) and revoke any of them independently. The
+        Settings page shows the preview (first 8 chars), label, creation
+        date, and last-used timestamp for each.
       </>
     ),
   },

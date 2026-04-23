@@ -8,13 +8,16 @@
 
 ### Claude Desktop MCP config
 
-Add this to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) — the equivalent `%APPDATA%\Claude\` path on Windows, `~/.config/Claude/` on Linux:
+1. Sign into https://artifact-hub.onrender.com with Google.
+2. Go to **Settings → Access tokens** (link in the header after sign-in, also at `/settings/tokens`). Click **Generate token**, give it a label (e.g. "MacBook Claude Desktop"), copy the raw value — it's shown once.
+3. Paste into `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) — the equivalent `%APPDATA%\Claude\` path on Windows, `~/.config/Claude/` on Linux:
 
 ```json
 {
   "mcpServers": {
     "artifact-hub": {
-      "url": "https://artifact-hub-mcp.onrender.com/mcp"
+      "url": "https://artifact-hub-mcp.onrender.com/mcp",
+      "headers": { "x-api-key": "ak_xxx..." }
     }
   }
 }
@@ -27,13 +30,19 @@ If your Claude Desktop version is too old to accept `url`, use the `mcp-remote` 
   "mcpServers": {
     "artifact-hub": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://artifact-hub-mcp.onrender.com/mcp"]
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://artifact-hub-mcp.onrender.com/mcp",
+        "--header",
+        "x-api-key:ak_xxx..."
+      ]
     }
   }
 }
 ```
 
-Restart Claude Desktop. Seven tools become available: `publish_artifact`, `search_artifacts`, `get_artifact`, `add_feedback`, `summarize_feedback`, `create_share_link`, `list_my_artifacts`. To see the artifact in the web gallery afterwards, pass your Google account email as `authorEmail` — that's the key the web UI filters on.
+Restart Claude Desktop. Seven tools become available: `publish_artifact`, `search_artifacts`, `get_artifact`, `add_feedback`, `summarize_feedback`, `create_share_link`, `list_my_artifacts` — all automatically scoped to the Google account the token was created under. No `authorEmail` argument anywhere; the token *is* the identity.
 
 ## What I Built and Why
 
@@ -56,7 +65,7 @@ Product decisions:
 - **Versioning / "v2 of this mockup".** Each publish is a new row. No relationship between iterations.
 - **Server-side HTML sanitization with DOMPurify.** Executables and MIME-mismatched content are already rejected at ingest, and HTML artifacts render inside a sandboxed iframe (`sandbox="allow-scripts allow-same-origin"`). A fully untrusted deploy would still want DOMPurify on ingest so we can drop `allow-scripts`.
 - **Notifications.** No emails / webhooks when feedback lands on your artifact.
-- **Per-user MCP API keys.** Today the MCP service uses one shared `ARTIFACT_HUB_API_KEY` and trusts whatever `authorEmail` the caller sends. Demo-grade; see "Next Week".
+- **MCP-native OAuth.** Personal access tokens (see "How the MCP Integration Works") handle the per-user identity story for now; swapping to Claude Desktop's MCP OAuth flow would remove even the one-time token paste, but relies on uneven client support.
 
 ## Architecture Overview
 
@@ -107,9 +116,9 @@ The MCP server is its own executable and its own Render service — `src/mcp-ser
 
 Each tool is defined with a Zod schema for input validation and returns MCP `content` blocks — plain text with embedded URLs that point back at the web UI, so "publish this for me" ends with a clickable link the user opens in a browser.
 
-**Auth.** The MCP service shares a single `ARTIFACT_HUB_API_KEY` with the web service. `middleware.ts` on the web side treats a matching `x-api-key` header as an auth bypass, so MCP-sourced uploads don't need a Google session. In exchange, any API-key holder can publish as any `authorEmail` — acceptable for this challenge, upgraded to per-user keys in "Next Week".
+**Auth.** Per-user personal access tokens stored in `hub_api_keys` (sha256 hash only; raw shown once at creation). Claude Desktop sends the token as the `x-api-key` header on every call. The MCP server resolves the token to a `user_email` on arrival — that email is then the implicit owner for every tool's DB query and is forwarded to `/api/artifacts` on publish. Each user manages their own tokens at `/settings/tokens`; individual tokens can be revoked without disturbing others.
 
-**Linking MCP uploads to the web gallery.** The gallery filters by `session.user.email`. To have MCP uploads show up after you sign in, pass your Google email as the `authorEmail` argument on `publish_artifact`.
+**Linking MCP uploads to the web gallery.** The token *is* the identity — artifacts published via MCP auto-attach to the Google account the token was created under. No `authorEmail` argument anywhere.
 
 ## Where and Why I Used LLM Capabilities
 
@@ -152,7 +161,7 @@ HTML artifacts render in a sandboxed iframe (`sandbox="allow-scripts allow-same-
 2. **Versioning / "v2 of this mockup"** (1-2 days). Add `parent_artifact_id` on `hub_artifacts`, render a version chooser on the detail page. This is the feature that makes the hub useful for iteration, not just archival.
 3. **Server-side HTML sanitization with DOMPurify** (0.5 day). On ingest for `type=html` artifacts. Lets us drop `allow-scripts` from the iframe sandbox for user-submitted content.
 4. **Embeddings-based search** (1-2 days). Swap the `ILIKE` title/description search for a `pgvector` similarity search over artifact content, keep tag filter as a boolean clause. Much better discovery when the hub has hundreds of artifacts.
-5. **Per-user MCP API keys** (0.5 day). Today the MCP service shares one static `ARTIFACT_HUB_API_KEY` with the web service and trusts whatever `authorEmail` the caller sends — demo-grade, and anyone with the shared key can publish as anyone. Next step: a `hub_api_keys` table (`user_email`, hashed key, label, created/last-used timestamps), a settings page where each signed-in user generates and revokes their own key, and a web-side middleware change so the key (not an `authorEmail` form field) determines the artifact's owner. Unblocks safe multi-tenant MCP use without waiting for full MCP-OAuth support in Claude Desktop.
+5. **MCP-native OAuth** (2 days). Personal access tokens already handle per-user identity, but the user still has to paste one once. Implementing the MCP spec's OAuth flow (`/authorize` + `/token` endpoints on the MCP service, Google ID token verification, session → token exchange) removes even the paste. Depends on Claude Desktop's OAuth-for-third-party-MCP support — recent and not uniform across versions.
 6. **Notifications** (1 day). Email / Slack webhook when feedback lands on an artifact you own. `hub_artifacts.author_email` is already a verified Google identity, so this is a straightforward SendGrid / Resend integration.
 7. **Async VirusTotal** (0.5 day). Today VT is in the hot path with a 15 s timeout. Move it to a background scan with a `scan_status` enum on `hub_artifacts` and hide not-yet-clean uploads from the gallery. Gets the 15 s out of the publish latency.
 
@@ -169,7 +178,7 @@ HTML artifacts render in a sandboxed iframe (`sandbox="allow-scripts allow-same-
 5. **Leave feedback** — scroll to the feedback section. Submit 2-3 pieces of feedback (name, text, optional 1-5 rating).
 6. **Summarize feedback** — once ≥2 pieces exist, the **AI Summary** button appears. Click → Anthropic produces a 2-4 sentence summary highlighting consensus/disagreement/actionable points.
 7. **Share** — click **Share**, pick a TTL (default 48h), optionally a max-views cap. Open the returned link in an incognito tab to confirm the shared view works without a Google account.
-8. **Publish from Claude Desktop via MCP** — register the MCP endpoint in Claude Desktop's config (see "Links" → Claude Desktop MCP config), restart. In a Claude Desktop chat: *"Using the artifact-hub MCP server, publish a short HTML greeting from me at <your-google-email>."* — Claude calls `publish_artifact`, which forwards the file to the web service (still enforcing all three upload-check layers), returns the web URL, and the artifact appears in your web gallery.
+8. **Publish from Claude Desktop via MCP** — generate a personal access token at **Settings → Access tokens**, paste it into Claude Desktop's config under `headers.x-api-key` (see "Links"), restart. In a Claude Desktop chat: *"Using the artifact-hub MCP server, publish a short HTML greeting."* — Claude calls `publish_artifact`; the token identifies you, the web service enforces all three upload-check layers, returns the web URL, and the artifact appears in your gallery alongside the ones you uploaded from the browser.
 9. **Smoke-test the upload-validation pipeline** — upload a file containing the literal string `X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`. The request is rejected with "EICAR antivirus test pattern detected" even without a VT key. Also try renaming `cmd.exe` to `image.png` — the PE header check rejects it.
 
 ## Claude Code Session Logs

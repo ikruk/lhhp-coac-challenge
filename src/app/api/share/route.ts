@@ -3,11 +3,11 @@ import { createShareLink } from "@/lib/share";
 import { db } from "@/db";
 import { artifacts } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { auth } from "@/auth";
+import { getAuthedUser } from "@/lib/auth-helpers";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const authed = await getAuthedUser(req);
+  if (!authed) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,13 +26,13 @@ export async function POST(req: NextRequest) {
     .where(eq(artifacts.id, artifactId))
     .limit(1);
 
-  if (!artifact || artifact.authorEmail !== session.user.email) {
+  if (!artifact || artifact.authorEmail !== authed.email) {
     return NextResponse.json({ error: "Artifact not found" }, { status: 404 });
   }
 
   const { token, expiresAt } = await createShareLink({
     artifactId,
-    createdBy: session.user.email,
+    createdBy: authed.email,
     expiresInHours,
     maxViews,
   });

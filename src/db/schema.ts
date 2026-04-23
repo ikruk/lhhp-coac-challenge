@@ -65,6 +65,18 @@ export const shareLinks = pgTable("hub_share_links", {
   createdBy: text("created_by").notNull(),
 });
 
+export const apiKeys = pgTable("hub_api_keys", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userEmail: text("user_email").notNull(),
+  keyHash: text("key_hash").notNull().unique(),
+  keyPreview: text("key_preview").notNull(),
+  label: text("label").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+});
+
 // Type exports
 export type Artifact = typeof artifacts.$inferSelect;
 export type NewArtifact = typeof artifacts.$inferInsert;
@@ -72,3 +84,5 @@ export type Feedback = typeof feedback.$inferSelect;
 export type NewFeedback = typeof feedback.$inferInsert;
 export type ShareLink = typeof shareLinks.$inferSelect;
 export type NewShareLink = typeof shareLinks.$inferInsert;
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;

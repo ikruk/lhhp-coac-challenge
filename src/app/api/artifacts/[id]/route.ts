@@ -3,14 +3,17 @@ import { db } from "@/db";
 import { artifacts } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { deleteFile } from "@/lib/storage";
-import { auth } from "@/auth";
+import { getAuthedUser } from "@/lib/auth-helpers";
 
-async function requireOwner(id: string): Promise<
+async function requireOwner(
+  req: NextRequest,
+  id: string
+): Promise<
   | { ok: true; artifact: typeof artifacts.$inferSelect }
   | { ok: false; response: NextResponse }
 > {
-  const session = await auth();
-  if (!session?.user?.email) {
+  const authed = await getAuthedUser(req);
+  if (!authed) {
     return {
       ok: false,
       response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
@@ -30,7 +33,7 @@ async function requireOwner(id: string): Promise<
     };
   }
 
-  if (artifact.authorEmail !== session.user.email) {
+  if (artifact.authorEmail !== authed.email) {
     return {
       ok: false,
       response: NextResponse.json({ error: "Not found" }, { status: 404 }),
@@ -41,11 +44,11 @@ async function requireOwner(id: string): Promise<
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const check = await requireOwner(id);
+  const check = await requireOwner(req, id);
   if (!check.ok) return check.response;
   return NextResponse.json({ artifact: check.artifact });
 }
@@ -55,7 +58,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const check = await requireOwner(id);
+  const check = await requireOwner(req, id);
   if (!check.ok) return check.response;
 
   const body = (await req.json().catch(() => null)) as
@@ -104,11 +107,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const check = await requireOwner(id);
+  const check = await requireOwner(req, id);
   if (!check.ok) return check.response;
 
   await deleteFile(check.artifact.filePath);
