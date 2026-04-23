@@ -2,10 +2,13 @@ import { promises as fs } from "fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
+function resolveUploadDir(): string {
+  if (process.env.UPLOAD_DIR) return process.env.UPLOAD_DIR;
+  return path.join(/* turbopackIgnore: true */ process.cwd(), "uploads");
+}
 
 export async function ensureUploadDir(): Promise<void> {
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
+  await fs.mkdir(resolveUploadDir(), { recursive: true });
 }
 
 export function getArtifactType(mimeType: string): "html" | "image" | "pdf" | "other" {
@@ -24,7 +27,7 @@ export async function saveFile(
 
   const ext = path.extname(originalName) || guessExtension(mimeType);
   const fileName = `${uuidv4()}${ext}`;
-  const filePath = path.join(UPLOAD_DIR, fileName);
+  const filePath = path.join(resolveUploadDir(), fileName);
 
   await fs.writeFile(filePath, buffer);
 
@@ -41,7 +44,7 @@ export async function saveContent(
   const ext = guessExtension(mimeType);
   const safeName = title.replace(/[^a-zA-Z0-9-_]/g, "_").slice(0, 50);
   const fileName = `${uuidv4()}${ext}`;
-  const filePath = path.join(UPLOAD_DIR, fileName);
+  const filePath = path.join(resolveUploadDir(), fileName);
 
   const buffer = Buffer.from(content, "utf-8");
   await fs.writeFile(filePath, buffer);
@@ -50,12 +53,12 @@ export async function saveContent(
 }
 
 export async function readFile(storedName: string): Promise<Buffer> {
-  const filePath = path.join(UPLOAD_DIR, storedName);
+  const filePath = path.join(resolveUploadDir(), storedName);
   return fs.readFile(filePath);
 }
 
 export async function deleteFile(storedName: string): Promise<void> {
-  const filePath = path.join(UPLOAD_DIR, storedName);
+  const filePath = path.join(resolveUploadDir(), storedName);
   await fs.unlink(filePath).catch(() => {});
 }
 
