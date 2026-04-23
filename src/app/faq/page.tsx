@@ -38,6 +38,21 @@ const faqs: { q: string; a: React.ReactNode }[] = [
     ),
   },
   {
+    q: "Can I edit or delete an artifact?",
+    a: (
+      <>
+        Yes — open one of your artifacts and use the{" "}
+        <strong className="text-ink">Edit</strong> button to rewrite the
+        title, description, or tags, or the{" "}
+        <strong className="text-ink">Delete</strong> button to remove it
+        entirely. Delete is confirmed in a dialog and is irreversible: the
+        file is removed from storage and associated feedback and share links
+        are dropped with it (the database foreign keys cascade). You can only
+        edit or delete artifacts you own.
+      </>
+    ),
+  },
+  {
     q: "How do share links work?",
     a: (
       <>
