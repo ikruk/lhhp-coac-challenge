@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthSessionProvider } from "@/components/SessionProvider";
+import { Footer } from "@/components/Footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,7 +35,10 @@ export default function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-canvas text-ink">
-        <AuthSessionProvider>{children}</AuthSessionProvider>
+        <AuthSessionProvider>
+          <div className="flex-1">{children}</div>
+          <Footer />
+        </AuthSessionProvider>
       </body>
     </html>
   );
