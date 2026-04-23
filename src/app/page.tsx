@@ -43,19 +43,19 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-medium tracking-tight text-ink">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-xl font-medium tracking-tight text-ink">
               Artifact Hub
             </h1>
-            <p className="text-sm text-ink-faint">
+            <p className="text-sm text-ink-faint hidden sm:block">
               Your AI-generated artifacts
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
             <Link
               href="/artifacts/new"
-              className="px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors"
+              className="px-3 sm:px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors"
             >
               Publish
             </Link>

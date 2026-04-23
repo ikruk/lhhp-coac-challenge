@@ -144,6 +144,41 @@
     background: var(--panel);
     color: var(--ink);
   }
+
+  /* --- Mobile / narrow viewports --- */
+  @media (max-width: 760px) {
+    .slide {
+      padding: 3.5vh 5vw 10vh;
+      justify-content: flex-start;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    h1 { font-size: clamp(1.8rem, 8vw, 2.4rem); }
+    h2 { font-size: clamp(1.25rem, 5.2vw, 1.65rem); margin-bottom: .6em; }
+    p, li { font-size: clamp(.92rem, 3.8vw, 1.05rem); }
+    .eyebrow { font-size: .72rem; letter-spacing: .18em; margin-bottom: 1rem; }
+    .grid-2 { grid-template-columns: 1fr; gap: 1rem; }
+    .card { padding: .95rem 1.05rem; }
+    .card h3 { font-size: 1.02rem; }
+    .card p { font-size: .92rem; }
+    .card[style*="grid-column"] { grid-column: auto !important; }
+    .chips { gap: .4rem; }
+    .chip { font-size: .78rem; padding: .25em .6em; }
+    .ascii {
+      font-size: .56rem;
+      line-height: 1.3;
+      padding: .8em;
+      overflow-x: auto;
+    }
+    /* Let tables horizontally scroll rather than squish */
+    table { display: block; overflow-x: auto; white-space: nowrap; }
+    th, td { padding: .45rem .55rem; font-size: .9rem; }
+    td code { white-space: nowrap; }
+    .hud {
+      padding: 0 1rem; font-size: .72rem; bottom: .8rem;
+    }
+    .title-slide .tag { font-size: 1rem; }
+  }
 </style>
 </head>
 <body>
@@ -397,7 +432,11 @@
     else if (e.key === 'End') { show(slides.length - 1); e.preventDefault(); }
   });
 
+  // Left/right click navigation (desktop only — on touch devices the swipe
+  // handler takes over, and a tap shouldn't accidentally advance the deck).
+  const isCoarsePointer = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
   document.addEventListener('click', (e) => {
+    if (isCoarsePointer) return;
     if (e.target.closest('a')) return;
     const half = window.innerWidth / 2;
     show(e.clientX > half ? i + 1 : i - 1);
@@ -425,7 +464,9 @@
     wheelIdleTimer = setTimeout(() => { wheelLocked = false; }, WHEEL_COOLDOWN_MS);
   }, { passive: false });
 
-  // Touch swipe for tablets / phones.
+  // Touch swipe for tablets / phones — only horizontal-dominant gestures
+  // change slides, so vertical swipes keep working as native scroll inside a
+  // slide whose content overflows the viewport.
   let touchStartX = 0;
   let touchStartY = 0;
   document.addEventListener('touchstart', (e) => {
@@ -435,9 +476,9 @@
   document.addEventListener('touchend', (e) => {
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = e.changedTouches[0].clientY - touchStartY;
-    if (Math.abs(dx) < 40 && Math.abs(dy) < 40) return;
-    const delta = Math.abs(dx) > Math.abs(dy) ? -dx : -dy;
-    show(delta > 0 ? i + 1 : i - 1);
+    if (Math.abs(dx) < 50) return;
+    if (Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    show(dx < 0 ? i + 1 : i - 1);
   }, { passive: true });
 
   const initial = parseInt(location.hash.slice(1), 10);
