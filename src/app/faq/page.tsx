@@ -1,0 +1,169 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "FAQ — Artifact Hub",
+};
+
+const faqs: { q: string; a: React.ReactNode }[] = [
+  {
+    q: "What is Artifact Hub?",
+    a: (
+      <>
+        A small workspace for publishing AI-generated content — HTML mockups,
+        images, PDFs, notes — getting Claude to tag and describe them
+        automatically, collecting feedback, and sharing them outside the team
+        via time-limited links.
+      </>
+    ),
+  },
+  {
+    q: "How do I sign in?",
+    a: (
+      <>
+        Click <strong className="text-ink">Sign in with Google</strong> in the
+        header. The Google email on your account becomes the owner of any
+        artifact you publish and the filter on what you see in the gallery.
+      </>
+    ),
+  },
+  {
+    q: "Who can see my artifacts?",
+    a: (
+      <>
+        Only you, while signed in. The gallery and detail pages are filtered to
+        your Google email. An artifact only leaves that boundary when you
+        create a <strong className="text-ink">share link</strong>.
+      </>
+    ),
+  },
+  {
+    q: "How do share links work?",
+    a: (
+      <>
+        On an artifact's page, click <strong className="text-ink">Share</strong>.
+        Pick an expiry (1 hour to 30 days) and an optional max-views cap. Anyone
+        with the link can view the artifact and leave feedback until it expires
+        or the view cap is hit — no Google account required on their side.
+      </>
+    ),
+  },
+  {
+    q: "What file types can I upload?",
+    a: (
+      <>
+        HTML, PNG/JPG/GIF/WebP/SVG images, PDF, plain text, and Markdown. HTML
+        renders inline in a sandboxed iframe, images and PDFs render natively,
+        everything else falls back to a download button. Upload cap is 10 MB.
+      </>
+    ),
+  },
+  {
+    q: "Where do the tags and description come from?",
+    a: (
+      <>
+        Claude Sonnet. At upload time, if you leave the description or tags
+        empty, the title and first 2000 characters of the content are sent to
+        Claude and it returns a 1-2 sentence description and 3-6 lowercase
+        tags. Fill the fields in manually to override. If the AI call fails,
+        the upload still succeeds — the fields just stay empty.
+      </>
+    ),
+  },
+  {
+    q: "What does the AI Summary button do?",
+    a: (
+      <>
+        Once an artifact has two or more pieces of feedback, the{" "}
+        <strong className="text-ink">AI Summary</strong> button collapses them
+        into a 2-4 sentence summary highlighting consensus, disagreements, and
+        actionable suggestions. It's on-demand, not automatic.
+      </>
+    ),
+  },
+  {
+    q: "Can I publish from Claude Desktop?",
+    a: (
+      <>
+        Yes — the MCP server at{" "}
+        <code className="font-mono text-accent">artifact-hub-mcp.onrender.com/mcp</code>{" "}
+        exposes <code className="font-mono">publish_artifact</code>,{" "}
+        <code className="font-mono">search_artifacts</code>,{" "}
+        <code className="font-mono">get_artifact</code>,{" "}
+        <code className="font-mono">add_feedback</code>,{" "}
+        <code className="font-mono">summarize_feedback</code>,{" "}
+        <code className="font-mono">create_share_link</code>, and{" "}
+        <code className="font-mono">list_my_artifacts</code> as MCP tools. Add
+        the URL to your Claude Desktop config and pass your Google email as{" "}
+        <code className="font-mono">authorEmail</code> so the artifact lands in
+        your web gallery.
+      </>
+    ),
+  },
+  {
+    q: "Are my uploads durable?",
+    a: (
+      <>
+        Yes on the production deployment — files are stored on a persistent
+        disk mounted on the web service. In a one-person local dev setup,
+        files live at <code className="font-mono">./uploads</code> by default.
+      </>
+    ),
+  },
+];
+
+export default function FaqPage() {
+  return (
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
+        <div className="max-w-3xl mx-auto px-6 py-4">
+          <Link
+            href="/"
+            className="text-sm text-ink-faint hover:text-ink-muted mb-2 inline-block"
+          >
+            &larr; Back to gallery
+          </Link>
+          <h1 className="text-2xl font-medium tracking-tight text-ink">FAQ</h1>
+          <p className="text-ink-muted text-sm mt-1">
+            Everything you might want to know about Artifact Hub.
+          </p>
+        </div>
+      </header>
+
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        <ul className="space-y-4">
+          {faqs.map(({ q, a }) => (
+            <li
+              key={q}
+              className="bg-panel border border-edge rounded-2xl overflow-hidden"
+            >
+              <details className="group">
+                <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between gap-4 hover:bg-panel-raised/40 transition-colors">
+                  <span className="font-display font-medium text-ink">
+                    {q}
+                  </span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-4 w-4 text-ink-faint transition-transform group-open:rotate-180 shrink-0"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </summary>
+                <div className="px-5 pb-5 pt-0 text-sm text-ink-muted leading-relaxed border-t border-edge/60">
+                  <div className="pt-4">{a}</div>
+                </div>
+              </details>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
