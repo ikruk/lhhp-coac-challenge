@@ -7,6 +7,7 @@ const PUBLIC_PREFIXES = [
   "/api/feedback",
   "/share/",
   "/faq",
+  "/signin",
   "/_next",
   "/favicon.ico",
 ];
@@ -38,7 +39,7 @@ export default auth((req) => {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const signInUrl = new URL("/api/auth/signin", req.nextUrl.origin);
+  const signInUrl = new URL("/signin", req.nextUrl.origin);
   signInUrl.searchParams.set("callbackUrl", pathname);
   return NextResponse.redirect(signInUrl);
 });
