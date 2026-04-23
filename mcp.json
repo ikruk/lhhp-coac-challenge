@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "artifact-hub": {
+      "url": "https://artifact-hub-mcp.onrender.com/mcp"
+    }
+  }
+}
