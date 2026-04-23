@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Artifact Hub — Project Overview</title>
+<style>
+  :root {
+    --canvas: #0b0d10;
+    --panel:  #14181d;
+    --edge:   #242a31;
+    --ink:    #e6e8eb;
+    --muted:  #9aa3ad;
+    --accent: #ff7a45;
+    --accent-2: #5eb0ef;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Inter, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .deck { position: relative; height: 100vh; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0;
+    display: none;
+    padding: 6vh 8vw;
+    flex-direction: column;
+    justify-content: center;
+    animation: fade .25s ease-out;
+  }
+  .slide.active { display: flex; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  h1 {
+    font-size: clamp(2rem, 4.4vw, 4rem);
+    line-height: 1.05;
+    margin: 0 0 .4em;
+    letter-spacing: -.02em;
+  }
+  h2 {
+    font-size: clamp(1.4rem, 2.4vw, 2.2rem);
+    margin: 0 0 .8em;
+    letter-spacing: -.01em;
+    color: var(--ink);
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: .22em;
+    font-size: .78rem;
+    color: var(--accent);
+    margin-bottom: 1.4rem;
+  }
+  p, li { font-size: clamp(1rem, 1.3vw, 1.25rem); line-height: 1.5; color: var(--ink); }
+  .muted { color: var(--muted); }
+  ul { padding-left: 1.1em; margin: .4em 0; }
+  li { margin: .35em 0; }
+  li::marker { color: var(--accent); }
+  strong { color: var(--ink); }
+  code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 6px;
+  }
+  code { padding: .1em .4em; font-size: .92em; }
+  pre { padding: 1em 1.2em; overflow: auto; font-size: .95rem; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+  }
+  .card h3 { margin: 0 0 .4em; font-size: 1.15rem; color: var(--accent-2); }
+  .card p { margin: 0; font-size: 1rem; color: var(--muted); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+  .chip {
+    padding: .3em .7em;
+    border: 1px solid var(--edge);
+    background: var(--panel);
+    border-radius: 999px;
+    font-size: .88rem;
+    color: var(--muted);
+  }
+
+  .hud {
+    position: fixed; bottom: 1.2rem; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 2rem;
+    font-size: .82rem; color: var(--muted);
+    pointer-events: none;
+  }
+  .hud .brand { color: var(--accent); letter-spacing: .15em; text-transform: uppercase; font-weight: 600; }
+  .progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .2s ease-out;
+    z-index: 10;
+  }
+
+  .title-slide { text-align: left; }
+  .title-slide h1 {
+    background: linear-gradient(90deg, var(--ink), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .title-slide .tag { color: var(--muted); font-size: clamp(1rem, 1.6vw, 1.4rem); max-width: 48ch; }
+
+  .ascii {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: clamp(.7rem, .95vw, 1rem);
+    white-space: pre;
+    background: var(--panel);
+    border: 1px solid var(--edge);
+    border-radius: 12px;
+    padding: 1.2em;
+    color: var(--ink);
+    line-height: 1.35;
+    overflow: auto;
+  }
+
+  table { border-collapse: collapse; margin-top: .8rem; width: 100%; font-size: 1rem; }
+  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--edge); }
+  th { color: var(--accent-2); font-weight: 600; }
+  td code { font-size: .85em; }
+
+  a { color: var(--accent-2); text-decoration: none; border-bottom: 1px dotted var(--accent-2); }
+  a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .kbd {
+    display: inline-block;
+    padding: .15em .5em;
+    font-family: ui-monospace, monospace;
+    font-size: .82em;
+    border: 1px solid var(--edge);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="deck" id="deck">
+
+  <!-- 1. Title -->
+  <section class="slide title-slide active">
+    <div class="eyebrow">AI-Generated Content Hub</div>
+    <h1>Artifact Hub</h1>
+    <p class="tag">A small hub where teams publish AI-generated artifacts, get them auto-tagged and described, collect structured feedback, and share them via time-boxed links — with first-class MCP support for Claude Desktop.</p>
+    <div class="chips">
+      <span class="chip">Next.js 16 App Router</span>
+      <span class="chip">MCP (StreamableHTTP)</span>
+      <span class="chip">Drizzle + Postgres</span>
+      <span class="chip">Auth.js v5 / Google</span>
+      <span class="chip">Anthropic SDK</span>
+    </div>
+  </section>
+
+  <!-- 2. What problem -->
+  <section class="slide">
+    <div class="eyebrow">The Problem</div>
+    <h2>AI output lives nowhere</h2>
+    <div class="grid-2">
+      <div>
+        <p>Teams generate mockups, diagrams, notes, and documents with AI tools — but the outputs end up in:</p>
+        <ul>
+          <li>Slack threads that vanish after 14 days</li>
+          <li>Random local folders on one person's laptop</li>
+          <li>Email attachments nobody can find later</li>
+          <li>Private chat histories, not shareable with clients</li>
+        </ul>
+      </div>
+      <div>
+        <p><strong>Artifact Hub</strong> is the smallest thing that demonstrates the full loop a coaching/AI-content team cares about:</p>
+        <p style="font-size: 1.4rem; color: var(--accent); margin-top: 1rem;">produce → publish → review → share</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Architecture -->
+  <section class="slide">
+    <div class="eyebrow">Architecture</div>
+    <h2>Two services, one data layer</h2>
+    <div class="ascii">┌─────────────────────────┐          ┌─────────────────────────┐
+│ artifact-hub            │          │ artifact-hub-mcp        │
+│ Next.js 16 App Router   │          │ Standalone MCP server   │
+│ UI + REST API           │◀─────────│ (Express + SDK)         │
+│ Google sign-in + API-key│  fetch   │ on write                │
+│ :10000  (Render PORT)   │──────────▶                         │
+└──────────┬──────────────┘          └──────────┬──────────────┘
+           │                                    │
+           ▼                                    ▼
+   ┌───────────────┐                  ┌─────────────────────┐
+   │ Render disk   │                  │ Shared Postgres     │
+   │ /var/data     │                  │ hub_* tables        │
+   │ (uploads)     │                  │ (direct reads from  │
+   │               │                  │  both services)     │
+   └───────────────┘                  └─────────────────────┘</div>
+    <p class="muted" style="margin-top: 1rem;">Web service is the sole owner of the uploads disk. MCP publishes by POSTing to the web API; reads go to Postgres directly.</p>
+  </section>
+
+  <!-- 4. Data model -->
+  <section class="slide">
+    <div class="eyebrow">Data Model</div>
+    <h2>Four tables, all prefixed <code>hub_</code></h2>
+    <table>
+      <thead>
+        <tr><th>Table</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>hub_artifacts</code></td><td>id, title, type enum, file_path, tags[], author_email, timestamps</td></tr>
+        <tr><td><code>hub_feedback</code></td><td>author_name, content, rating 1–5, nullable parent_id (reply support)</td></tr>
+        <tr><td><code>hub_share_links</code></td><td>nanoid(21) token, expires_at, max_views, view_count</td></tr>
+        <tr><td><code>hub_api_keys</code></td><td>SHA-256 hashed personal access tokens for MCP clients</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="margin-top: 1.2rem;">The <code>hub_</code> prefix is load-bearing — the local dev DB is shared with another project, so <code>drizzle.config.ts</code> uses <code>tablesFilter: ["hub_*"]</code>. Migrations are generate-only; <code>db:push</code> is banned because it tries to drop sequences it doesn't own.</p>
+  </section>
+
+  <!-- 5. Key Product Decisions -->
+  <section class="slide">
+    <div class="eyebrow">Product Decisions</div>
+    <h2>What makes it feel right</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Upload anything</h3>
+        <p>HTML / image / PDF are first-class (render inline). Everything else degrades to a download button.</p>
+      </div>
+      <div class="card">
+        <h3>AI metadata by default</h3>
+        <p>Only a title is required. Tags and description are inferred at upload time. Users can override — most don't.</p>
+      </div>
+      <div class="card">
+        <h3>Feedback lives with the artifact</h3>
+        <p>Inline in the DB, not scattered across Slack threads. A single "Summarize" button condenses long discussions.</p>
+      </div>
+      <div class="card">
+        <h3>Time-boxed share links</h3>
+        <p>Signed tokens with TTL + optional view cap. No account required for external reviewers.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. MCP Integration -->
+  <section class="slide">
+    <div class="eyebrow">MCP Integration</div>
+    <h2>Seven tools, one identity</h2>
+    <table>
+      <thead><tr><th>Tool</th><th>Backend</th></tr></thead>
+      <tbody>
+        <tr><td><code>publish_artifact</code></td><td>POST to web <code>/api/artifacts</code> with <code>x-api-key</code></td></tr>
+        <tr><td><code>get_artifact</code></td><td>Postgres direct</td></tr>
+        <tr><td><code>search_artifacts</code></td><td>Postgres (<code>ilike</code> + tag filter)</td></tr>
+        <tr><td><code>list_my_artifacts</code></td><td>Postgres (scoped to token's user)</td></tr>
+        <tr><td><code>add_feedback</code></td><td>Postgres direct</td></tr>
+        <tr><td><code>summarize_feedback</code></td><td>Postgres + Anthropic Sonnet</td></tr>
+        <tr><td><code>create_share_link</code></td><td>Postgres (nanoid + TTL)</td></tr>
+      </tbody>
+    </table>
+    <p class="muted" style="margin-top: 1rem;">The token <em>is</em> the identity. Artifacts published via MCP auto-attach to the Google account the token was created under — no <code>authorEmail</code> argument anywhere.</p>
+  </section>
+
+  <!-- 7. Upload Security -->
+  <section class="slide">
+    <div class="eyebrow">Uploads &amp; Security</div>
+    <h2>Three layers before anything touches disk</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>1. Size cap · 10 MB</h3>
+        <p>Enforced in the browser before streaming, re-enforced in the route handler with a <code>413</code> if bypassed.</p>
+      </div>
+      <div class="card">
+        <h3>2. Content validation</h3>
+        <p>MIME allowlist · magic-byte match against declared MIME · PE/ELF/Mach-O header block · EICAR test-string block.</p>
+      </div>
+      <div class="card" style="grid-column: span 2;">
+        <h3>3. VirusTotal scan · optional</h3>
+        <p>When <code>VIRUSTOTAL_API_KEY</code> is set, every upload is posted to <code>/api/v3/files</code> and polled for up to 15 s. Any <code>malicious</code> or <code>suspicious</code> count rejects. Timeout / missing key falls through — VT is defense-in-depth, not the primary gate.</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top: 1rem;">HTML artifacts render in a sandboxed iframe (<code>sandbox="allow-scripts allow-same-origin"</code>). DOMPurify on ingest is next, so we can drop <code>allow-scripts</code>.</p>
+  </section>
+
+  <!-- 8. LLM Usage -->
+  <section class="slide">
+    <div class="eyebrow">Where LLMs Earn Their Keep</div>
+    <h2>Three single-turn completions, zero agentic loops</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Tag generation</h3>
+        <p>At upload: title + first 2000 chars → JSON array of 3–6 lowercase tags. Parsed with <code>/\[[\s\S]*\]/</code> to strip hallucinated prose.</p>
+      </div>
+      <div class="card">
+        <h3>Description generation</h3>
+        <p>1–2 sentence summary of what the artifact is. Fills in when the user left the field blank.</p>
+      </div>
+      <div class="card" style="grid-column: span 2;">
+        <h3>Feedback summarization</h3>
+        <p>On demand, when ≥2 feedback entries exist. Formats rows into numbered lines with ratings, asks Claude for consensus / disagreement / actionable suggestions.</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top: 1rem;"><strong>LLM output never blocks the write path.</strong> If the Anthropic API is down, publish still succeeds with empty tags and null description — cheap to backfill later.</p>
+  </section>
+
+  <!-- 9. Deployment -->
+  <section class="slide">
+    <div class="eyebrow">Deployment</div>
+    <h2>Two Render services, auto-deploy from <code>main</code></h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Web · artifact-hub</h3>
+        <p>Build: <code>npm install &amp;&amp; npm run build</code><br/>Start: <code>npm start</code> (prestart runs <code>db:migrate</code>)</p>
+        <p style="margin-top: .6rem;"><code>next-server</code> idles at 120–180 MB — fits the 512 MB tier. <code>next dev</code> spikes past the cap and OOMs.</p>
+      </div>
+      <div class="card">
+        <h3>MCP · artifact-hub-mcp</h3>
+        <p>Build: <code>npm install</code><br/>Start: <code>npx tsx src/mcp-server/index.ts</code></p>
+        <p style="margin-top: .6rem;">Reachable at <code>/mcp</code> over StreamableHTTP. Fresh <code>McpServer</code> + transport per request.</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top: 1rem;">Uploads live on a 5 GB Render persistent disk at <code>/var/data</code>. Durable across deploys, but single-region and coupled to one service — first thing to swap for production.</p>
+  </section>
+
+  <!-- 10. Roadmap -->
+  <section class="slide">
+    <div class="eyebrow">With Another Week</div>
+    <h2>What's next</h2>
+    <ul>
+      <li><strong>Object storage</strong> — Azure Blob / S3 adapter behind a <code>saveFile</code>/<code>readFile</code> interface. Removes single-region coupling.</li>
+      <li><strong>Versioning</strong> — <code>parent_artifact_id</code> on <code>hub_artifacts</code>. Turns the hub from archival into iteration.</li>
+      <li><strong>DOMPurify on ingest</strong> — so we can drop <code>allow-scripts</code> from the HTML iframe sandbox.</li>
+      <li><strong>Embeddings search</strong> — <code>pgvector</code> similarity over content, keep tag filter as a boolean clause.</li>
+      <li><strong>MCP-native OAuth</strong> — eliminates the one-time token paste, contingent on client support.</li>
+      <li><strong>Notifications</strong> — email / Slack webhook when feedback lands on one of your artifacts.</li>
+      <li><strong>Async VirusTotal</strong> — move the 15 s scan out of the publish hot path.</li>
+    </ul>
+  </section>
+
+  <!-- 11. Closing / Links -->
+  <section class="slide">
+    <div class="eyebrow">Try It</div>
+    <h1>Thanks.</h1>
+    <div class="grid-2" style="margin-top: 1rem;">
+      <div class="card">
+        <h3>Web</h3>
+        <p><a href="https://artifact-hub.onrender.com">artifact-hub.onrender.com</a></p>
+      </div>
+      <div class="card">
+        <h3>MCP endpoint</h3>
+        <p><a href="https://artifact-hub-mcp.onrender.com/mcp">artifact-hub-mcp.onrender.com/mcp</a></p>
+      </div>
+      <div class="card">
+        <h3>Source</h3>
+        <p><a href="https://github.com/ikruk/lhhp-coac-challenge">github.com/ikruk/lhhp-coac-challenge</a></p>
+      </div>
+      <div class="card">
+        <h3>Walkthrough</h3>
+        <p>See <code>WRITEUP.md</code> § Walkthrough for a 9-step demo script.</p>
+      </div>
+    </div>
+    <p class="muted" style="margin-top: 1.6rem;">Navigate with <span class="kbd">←</span> <span class="kbd">→</span> · jump to first/last with <span class="kbd">Home</span> / <span class="kbd">End</span>.</p>
+  </section>
+
+</div>
+
+<div class="hud">
+  <div class="brand">Artifact Hub</div>
+  <div id="counter">1 / 11</div>
+</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const counter = document.getElementById('counter');
+  const progress = document.getElementById('progress');
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    counter.textContent = (i + 1) + ' / ' + slides.length;
+    progress.style.width = ((i + 1) / slides.length * 100) + '%';
+    history.replaceState(null, '', '#' + (i + 1));
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { show(i + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { show(i - 1); e.preventDefault(); }
+    else if (e.key === 'Home') { show(0); e.preventDefault(); }
+    else if (e.key === 'End') { show(slides.length - 1); e.preventDefault(); }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return;
+    const half = window.innerWidth / 2;
+    show(e.clientX > half ? i + 1 : i - 1);
+  });
+
+  const initial = parseInt(location.hash.slice(1), 10);
+  show(Number.isFinite(initial) && initial > 0 ? initial - 1 : 0);
+</script>
+</body>
+</html>
