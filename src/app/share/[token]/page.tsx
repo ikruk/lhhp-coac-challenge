@@ -48,7 +48,7 @@ export default function SharePage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+      <div className="min-h-screen flex items-center justify-center text-ink-faint">
         Loading...
       </div>
     );
@@ -56,34 +56,44 @@ export default function SharePage({
 
   if (error || !artifact) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-xl font-bold text-gray-900 mb-2">
+          <h1 className="text-xl font-medium tracking-tight text-ink mb-2">
             Link Expired or Invalid
           </h1>
-          <p className="text-gray-500">{error || "This share link is no longer valid."}</p>
+          <p className="text-ink-muted">
+            {error || "This share link is no longer valid."}
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-6 py-4">
-          <p className="text-xs text-gray-400 mb-1">Shared via Artifact Hub</p>
-          <h1 className="text-2xl font-bold text-gray-900">{artifact.title}</h1>
+          <p className="text-xs uppercase tracking-wider text-accent/80 mb-1">
+            Shared via Artifact Hub
+          </p>
+          <h1 className="text-2xl font-medium tracking-tight text-ink">
+            {artifact.title}
+          </h1>
           {artifact.description && (
-            <p className="text-gray-500 mt-1">{artifact.description}</p>
+            <p className="text-ink-muted mt-1">{artifact.description}</p>
           )}
-          <div className="flex items-center gap-3 mt-2 text-sm text-gray-400">
+          <div className="flex items-center gap-3 mt-2 text-sm text-ink-faint">
             <span>{artifact.authorEmail}</span>
+            <span className="text-ink-faint/60">•</span>
             <span>{new Date(artifact.createdAt).toLocaleDateString()}</span>
           </div>
           {artifact.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
               {artifact.tags.map((tag) => (
-                <span key={tag} className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full">
+                <span
+                  key={tag}
+                  className="text-xs px-2 py-0.5 bg-accent-soft text-accent border border-accent/25 rounded-full"
+                >
                   {tag}
                 </span>
               ))}

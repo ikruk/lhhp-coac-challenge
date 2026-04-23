@@ -40,7 +40,7 @@ export default function ArtifactDetailPage({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-400">
+      <div className="min-h-screen flex items-center justify-center text-ink-faint">
         Loading...
       </div>
     );
@@ -48,10 +48,10 @@ export default function ArtifactDetailPage({
 
   if (!artifact) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 mb-2">Artifact not found</p>
-          <Link href="/" className="text-blue-600 text-sm hover:underline">
+          <p className="text-ink-muted mb-2">Artifact not found</p>
+          <Link href="/" className="text-accent text-sm hover:text-accent-strong hover:underline">
             Back to gallery
           </Link>
         </div>
@@ -60,56 +60,54 @@ export default function ArtifactDetailPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-6 py-4">
           <Link
             href="/"
-            className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-block"
+            className="text-sm text-ink-faint hover:text-ink-muted mb-2 inline-block"
           >
             &larr; Back to gallery
           </Link>
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-medium tracking-tight text-ink">
                 {artifact.title}
               </h1>
               {artifact.description && (
-                <p className="text-gray-500 mt-1">{artifact.description}</p>
+                <p className="text-ink-muted mt-1">{artifact.description}</p>
               )}
-              <div className="flex items-center gap-3 mt-2 text-sm text-gray-400">
+              <div className="flex items-center gap-3 mt-2 text-sm text-ink-faint">
                 <span>{artifact.authorEmail}</span>
-                <span>
-                  {new Date(artifact.createdAt).toLocaleDateString()}
-                </span>
+                <span className="text-ink-faint/60">•</span>
+                <span>{new Date(artifact.createdAt).toLocaleDateString()}</span>
+                <span className="text-ink-faint/60">•</span>
                 <span>{(artifact.fileSize / 1024).toFixed(1)} KB</span>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 shrink-0">
               <button
                 onClick={() => setShowShare(true)}
-                className="px-4 py-2 border border-gray-200 text-sm rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-edge bg-panel-raised/50 text-ink-muted hover:text-ink hover:bg-panel-raised text-sm rounded-lg transition-colors"
               >
                 Share
               </button>
               <a
                 href={`/api/artifacts/${artifact.id}/file`}
                 download={artifact.fileName}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors"
               >
                 Download
               </a>
             </div>
           </div>
 
-          {/* Tags */}
           {artifact.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-3">
               {artifact.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-xs px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full"
+                  className="text-xs px-2 py-0.5 bg-accent-soft text-accent border border-accent/25 rounded-full"
                 >
                   {tag}
                 </span>
@@ -119,7 +117,6 @@ export default function ArtifactDetailPage({
         </div>
       </header>
 
-      {/* Content */}
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
         <ArtifactViewer
           artifactId={artifact.id}
@@ -131,7 +128,6 @@ export default function ArtifactDetailPage({
         <FeedbackPanel artifactId={artifact.id} />
       </div>
 
-      {/* Share dialog */}
       {showShare && (
         <ShareDialog
           artifactId={artifact.id}

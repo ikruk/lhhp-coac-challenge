@@ -47,35 +47,41 @@ export function UploadForm() {
     }
   }
 
+  const inputClass =
+    "w-full px-3 py-2 bg-panel-raised border border-edge-strong rounded-lg text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-ring transition";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5 max-w-xl bg-panel border border-edge rounded-2xl p-6"
+    >
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+        <div className="p-3 bg-bad/10 border border-bad/40 rounded-lg text-sm text-bad">
           {error}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink-muted mb-1">
           File *
         </label>
         <div
-          className="border-2 border-dashed border-gray-200 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition-colors"
+          className="border-2 border-dashed border-edge-strong rounded-lg p-8 text-center cursor-pointer hover:border-accent hover:bg-accent-soft/40 transition-colors"
           onClick={() => fileInputRef.current?.click()}
         >
           {file ? (
             <div>
-              <p className="text-sm text-gray-900 font-medium">{file.name}</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-sm text-ink font-medium">{file.name}</p>
+              <p className="text-xs text-ink-faint mt-1">
                 {(file.size / 1024).toFixed(1)} KB — {file.type}
               </p>
             </div>
           ) : (
             <div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-ink-muted">
                 Click to select a file (HTML, image, PDF)
               </p>
-              <p className="text-xs text-gray-400 mt-1">Max 10MB</p>
+              <p className="text-xs text-ink-faint mt-1">Max 10MB</p>
             </div>
           )}
           <input
@@ -89,7 +95,7 @@ export function UploadForm() {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink-muted mb-1">
           Title *
         </label>
         <input
@@ -97,15 +103,15 @@ export function UploadForm() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Q3 Onboarding Flow Mockup"
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+          className={inputClass}
           required
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink-muted mb-1">
           Description{" "}
-          <span className="text-gray-400 font-normal">
+          <span className="text-ink-faint font-normal">
             (AI will generate if empty)
           </span>
         </label>
@@ -113,14 +119,14 @@ export function UploadForm() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="What is this artifact about?"
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 min-h-[80px]"
+          className={`${inputClass} min-h-[80px]`}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink-muted mb-1">
           Tags{" "}
-          <span className="text-gray-400 font-normal">
+          <span className="text-ink-faint font-normal">
             (comma-separated, AI generates if empty)
           </span>
         </label>
@@ -129,12 +135,12 @@ export function UploadForm() {
           value={tags}
           onChange={(e) => setTags(e.target.value)}
           placeholder="e.g. mockup, onboarding, landing-page"
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+          className={inputClass}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink-muted mb-1">
           Your Email *
         </label>
         <input
@@ -142,7 +148,7 @@ export function UploadForm() {
           value={authorEmail}
           onChange={(e) => setAuthorEmail(e.target.value)}
           placeholder="you@epam.com"
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+          className={inputClass}
           required
         />
       </div>
@@ -150,9 +156,11 @@ export function UploadForm() {
       <button
         type="submit"
         disabled={uploading || !file || !title || !authorEmail}
-        className="w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-4 py-2.5 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {uploading ? "Publishing... (AI is generating tags & description)" : "Publish Artifact"}
+        {uploading
+          ? "Publishing... (AI is generating tags & description)"
+          : "Publish Artifact"}
       </button>
     </form>
   );

@@ -40,43 +40,45 @@ export default function HomePage() {
   const allTags = Array.from(new Set(artifacts.flatMap((a) => a.tags))).sort();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Artifact Hub</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-xl font-medium tracking-tight text-ink">
+              Artifact Hub
+            </h1>
+            <p className="text-sm text-ink-faint">
               Browse and share AI-generated content
             </p>
           </div>
           <Link
             href="/artifacts/new"
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors shadow-[0_0_0_1px_var(--color-accent-ring)]"
           >
             Publish
           </Link>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex gap-3 mb-4">
           <input
             type="text"
             placeholder="Search artifacts..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+            className="flex-1 px-4 py-2.5 bg-panel-raised border border-edge-strong rounded-lg text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-ring transition"
           />
         </div>
 
         {allTags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="flex flex-wrap gap-2 mb-8">
             <button
               onClick={() => setSelectedTag(null)}
-              className={`text-xs px-3 py-1 rounded-full ${
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                 !selectedTag
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-accent text-canvas border-transparent"
+                  : "bg-panel text-ink-muted border-edge hover:bg-panel-raised hover:text-ink"
               }`}
             >
               All
@@ -85,10 +87,10 @@ export default function HomePage() {
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-                className={`text-xs px-3 py-1 rounded-full ${
+                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
                   selectedTag === tag
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-accent text-canvas border-transparent"
+                    : "bg-panel text-ink-muted border-edge hover:bg-panel-raised hover:text-ink"
                 }`}
               >
                 {tag}
@@ -98,13 +100,13 @@ export default function HomePage() {
         )}
 
         {loading ? (
-          <div className="text-center py-12 text-gray-400">Loading...</div>
+          <div className="text-center py-12 text-ink-faint">Loading...</div>
         ) : artifacts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-500 mb-2">No artifacts yet</p>
+            <p className="text-ink-muted mb-2">No artifacts yet</p>
             <Link
               href="/artifacts/new"
-              className="text-blue-600 text-sm hover:underline"
+              className="text-accent text-sm hover:text-accent-strong hover:underline"
             >
               Publish your first artifact
             </Link>

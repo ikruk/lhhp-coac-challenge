@@ -70,78 +70,92 @@ export function FeedbackPanel({ artifactId }: FeedbackPanelProps) {
     setSummarizing(false);
   }
 
+  const inputClass =
+    "w-full px-3 py-2 bg-panel-raised border border-edge-strong rounded-lg text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-ring transition";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-panel border border-edge rounded-2xl p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 className="text-lg font-display font-medium text-ink">
           Feedback ({items.length})
         </h2>
         {items.length >= 2 && (
           <button
             onClick={handleSummarize}
             disabled={summarizing}
-            className="text-sm px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 disabled:opacity-50"
+            className="text-sm px-3 py-1.5 bg-accent-soft text-accent border border-accent/30 rounded-lg hover:bg-accent/25 transition-colors disabled:opacity-50"
           >
-            {summarizing ? "Summarizing..." : "AI Summary"}
+            {summarizing ? "Summarizing..." : "✨ AI Summary"}
           </button>
         )}
       </div>
 
-      {/* AI Summary */}
       {summary && (
-        <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-          <p className="text-sm font-medium text-purple-700 mb-1">AI Summary</p>
-          <p className="text-sm text-gray-700">{summary}</p>
+        <div className="p-4 bg-accent-soft border border-accent/30 rounded-lg">
+          <p className="text-sm font-medium text-accent mb-1">AI Summary</p>
+          <p className="text-sm text-ink-muted">{summary}</p>
         </div>
       )}
 
-      {/* Feedback list */}
       {loading ? (
-        <p className="text-gray-400 text-sm">Loading feedback...</p>
+        <p className="text-ink-faint text-sm">Loading feedback...</p>
       ) : items.length === 0 ? (
-        <p className="text-gray-400 text-sm">No feedback yet. Be the first!</p>
+        <p className="text-ink-faint text-sm">No feedback yet. Be the first!</p>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <div key={item.id} className="p-4 bg-gray-50 rounded-lg">
+            <div
+              key={item.id}
+              className="p-4 bg-panel-raised/60 border border-edge rounded-lg"
+            >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-sm text-gray-900">
+                <span className="font-medium text-sm text-ink">
                   {item.authorName}
                 </span>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  {item.rating && <span>{"★".repeat(item.rating)}{"☆".repeat(5 - item.rating)}</span>}
-                  <span>{new Date(item.createdAt).toLocaleDateString()}</span>
+                <div className="flex items-center gap-2 text-xs text-ink-faint">
+                  {item.rating && (
+                    <span className="text-warn">
+                      {"★".repeat(item.rating)}
+                      <span className="text-ink-faint/60">
+                        {"★".repeat(5 - item.rating)}
+                      </span>
+                    </span>
+                  )}
+                  <span>
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
-              <p className="text-sm text-gray-700">{item.content}</p>
+              <p className="text-sm text-ink-muted">{item.content}</p>
             </div>
           ))}
         </div>
       )}
 
-      {/* Add feedback form */}
-      <form onSubmit={handleSubmit} className="space-y-3 border-t pt-4">
-        <h3 className="text-sm font-medium text-gray-700">Leave feedback</h3>
+      <form onSubmit={handleSubmit} className="space-y-3 border-t border-edge pt-5">
+        <h3 className="text-sm font-medium text-ink-muted">Leave feedback</h3>
         <input
           type="text"
           placeholder="Your name"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+          className={inputClass}
           required
         />
         <textarea
           placeholder="Your feedback..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400 min-h-[80px]"
+          className={`${inputClass} min-h-[80px]`}
           required
         />
         <div className="flex items-center gap-4">
           <select
             value={rating}
-            onChange={(e) => setRating(e.target.value ? parseInt(e.target.value) : "")}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+            onChange={(e) =>
+              setRating(e.target.value ? parseInt(e.target.value) : "")
+            }
+            className={inputClass + " max-w-[220px]"}
           >
             <option value="">Rating (optional)</option>
             <option value="1">1 - Poor</option>
@@ -153,7 +167,7 @@ export function FeedbackPanel({ artifactId }: FeedbackPanelProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors disabled:opacity-50"
           >
             {submitting ? "Submitting..." : "Submit"}
           </button>
