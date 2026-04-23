@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Artifact Hub — Architecture</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #111832;
+    --panel-2: #1a2247;
+    --ink: #e8ecff;
+    --muted: #9aa3c7;
+    --accent: #7c9cff;
+    --accent-2: #5fd0c1;
+    --warn: #f4b26a;
+    --danger: #ef6b8a;
+    --edge: #3a4a88;
+  }
+  html, body { background: var(--bg); color: var(--ink); margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 32px 24px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+  .diagram { background: var(--panel); border: 1px solid #222c55; border-radius: 12px; padding: 16px; }
+  svg { display: block; width: 100%; height: auto; }
+  .legend { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  .legend .item { background: var(--panel-2); border: 1px solid #2a356a; border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--muted); }
+  .legend .item b { color: var(--ink); display: block; margin-bottom: 2px; font-size: 13px; }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: middle; margin-right: 8px; }
+  .foot { color: var(--muted); font-size: 12px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Artifact Hub — System Architecture</h1>
+  <p class="sub">Next.js App Router UI + REST, cooperating with a standalone MCP server over a shared data layer.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 1200 780" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Artifact Hub architecture diagram">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#7c9cff" />
+        </marker>
+        <marker id="arrow-dim" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#5fd0c1" />
+        </marker>
+        <marker id="arrow-warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#f4b26a" />
+        </marker>
+        <style>
+          .grp-label { font: 600 12px -apple-system, "Inter", sans-serif; fill: #9aa3c7; letter-spacing: 0.08em; text-transform: uppercase; }
+          .box-title { font: 700 14px -apple-system, "Inter", sans-serif; fill: #e8ecff; }
+          .box-sub   { font: 500 11px -apple-system, "Inter", sans-serif; fill: #9aa3c7; }
+          .edge-lbl  { font: 500 10px -apple-system, "Inter", sans-serif; fill: #c9d0ee; }
+          .panel { fill: #111832; stroke: #2a356a; stroke-width: 1; }
+          .client { fill: #1a2247; stroke: #3a4a88; }
+          .service { fill: #18204a; stroke: #4c6ad6; }
+          .lib { fill: #14214a; stroke: #3a6b62; }
+          .data { fill: #241a3b; stroke: #8660d1; }
+          .external { fill: #2a1e1a; stroke: #d18a5f; }
+          .edge { stroke: #7c9cff; stroke-width: 1.4; fill: none; }
+          .edge-2 { stroke: #5fd0c1; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+          .edge-warn { stroke: #f4b26a; stroke-width: 1.4; fill: none; stroke-dasharray: 3 3; }
+        </style>
+      </defs>
+
+      <!-- CLIENTS -->
+      <g>
+        <text x="40" y="38" class="grp-label">Clients</text>
+        <rect x="40" y="52" width="220" height="80" rx="10" class="panel client" />
+        <text x="56" y="78" class="box-title">Browser</text>
+        <text x="56" y="98" class="box-sub">Next.js pages &amp; React Server</text>
+        <text x="56" y="114" class="box-sub">Components (App Router)</text>
+
+        <rect x="40" y="146" width="220" height="80" rx="10" class="panel client" />
+        <text x="56" y="172" class="box-title">MCP Client</text>
+        <text x="56" y="192" class="box-sub">Claude Desktop / IDE /</text>
+        <text x="56" y="208" class="box-sub">any MCP-capable agent</text>
+
+        <rect x="40" y="240" width="220" height="60" rx="10" class="panel client" />
+        <text x="56" y="266" class="box-title">Share Link Viewer</text>
+        <text x="56" y="284" class="box-sub">Unauthenticated /share/[token]</text>
+      </g>
+
+      <!-- AUTH -->
+      <g>
+        <text x="40" y="340" class="grp-label">Auth</text>
+        <rect x="40" y="354" width="220" height="76" rx="10" class="panel external" />
+        <text x="56" y="380" class="box-title">Google OAuth</text>
+        <text x="56" y="400" class="box-sub">via NextAuth (AUTH_GOOGLE_*)</text>
+        <text x="56" y="416" class="box-sub">session cookie → middleware</text>
+      </g>
+
+      <!-- NEXT.JS APP -->
+      <g>
+        <text x="310" y="38" class="grp-label">Next.js App (port 3000)</text>
+        <rect x="310" y="52" width="500" height="248" rx="12" class="panel service" />
+
+        <rect x="326" y="72" width="218" height="52" rx="8" class="panel" fill="#22306a" stroke="#4c6ad6" />
+        <text x="340" y="94" class="box-title">UI Pages</text>
+        <text x="340" y="112" class="box-sub">/, /signin, /artifacts/[id], /new, /faq, /share/[token]</text>
+
+        <rect x="562" y="72" width="232" height="52" rx="8" class="panel" fill="#22306a" stroke="#4c6ad6" />
+        <text x="576" y="94" class="box-title">middleware.ts</text>
+        <text x="576" y="112" class="box-sub">session gate on protected routes</text>
+
+        <rect x="326" y="138" width="468" height="150" rx="8" class="panel" fill="#172151" stroke="#4c6ad6" />
+        <text x="340" y="160" class="box-title">REST API (/api)</text>
+        <text x="340" y="182" class="box-sub">POST/GET /api/artifacts           — create + list</text>
+        <text x="340" y="200" class="box-sub">GET/PATCH/DELETE /api/artifacts/[id]</text>
+        <text x="340" y="218" class="box-sub">GET  /api/artifacts/[id]/file     — download</text>
+        <text x="340" y="236" class="box-sub">POST /api/feedback · POST /api/feedback/summarize</text>
+        <text x="340" y="254" class="box-sub">POST /api/share · GET /api/share/[token]</text>
+        <text x="340" y="272" class="box-sub">/api/auth/[...nextauth]           — NextAuth</text>
+      </g>
+
+      <!-- MCP SERVER -->
+      <g>
+        <text x="310" y="340" class="grp-label">MCP Server (port 3001)</text>
+        <rect x="310" y="354" width="500" height="180" rx="12" class="panel service" />
+        <text x="326" y="380" class="box-title">Express + @modelcontextprotocol/sdk</text>
+        <text x="326" y="398" class="box-sub">POST /mcp (StreamableHTTP transport)</text>
+
+        <rect x="326" y="412" width="220" height="110" rx="8" class="panel" fill="#172151" stroke="#4c6ad6" />
+        <text x="340" y="434" class="box-title">Tools</text>
+        <text x="340" y="454" class="box-sub">publish_artifact</text>
+        <text x="340" y="470" class="box-sub">search_artifacts · get_artifact</text>
+        <text x="340" y="486" class="box-sub">add_feedback · summarize_feedback</text>
+        <text x="340" y="502" class="box-sub">create_share_link</text>
+
+        <rect x="560" y="412" width="234" height="110" rx="8" class="panel" fill="#172151" stroke="#4c6ad6" />
+        <text x="574" y="434" class="box-title">publish bridge</text>
+        <text x="574" y="454" class="box-sub">publish_artifact calls REST</text>
+        <text x="574" y="470" class="box-sub">POST /api/artifacts with</text>
+        <text x="574" y="486" class="box-sub">x-api-key: ARTIFACT_HUB_API_KEY</text>
+        <text x="574" y="502" class="box-sub">other tools hit db directly</text>
+      </g>
+
+      <!-- SHARED LIB -->
+      <g>
+        <text x="860" y="38" class="grp-label">Shared Library</text>
+        <rect x="860" y="52" width="300" height="248" rx="12" class="panel lib" />
+
+        <rect x="876" y="72" width="268" height="44" rx="8" class="panel" fill="#13243f" stroke="#3a6b62" />
+        <text x="890" y="92" class="box-title">src/db</text>
+        <text x="890" y="108" class="box-sub">Drizzle + postgres-js (lazy Proxy)</text>
+
+        <rect x="876" y="122" width="268" height="44" rx="8" class="panel" fill="#13243f" stroke="#3a6b62" />
+        <text x="890" y="142" class="box-title">lib/ai</text>
+        <text x="890" y="158" class="box-sub">Anthropic SDK · tags / desc / summarize</text>
+
+        <rect x="876" y="172" width="268" height="44" rx="8" class="panel" fill="#13243f" stroke="#3a6b62" />
+        <text x="890" y="192" class="box-title">lib/storage</text>
+        <text x="890" y="208" class="box-sub">UPLOAD_DIR filesystem writer</text>
+
+        <rect x="876" y="222" width="128" height="68" rx="8" class="panel" fill="#13243f" stroke="#3a6b62" />
+        <text x="890" y="244" class="box-title">lib/file-</text>
+        <text x="890" y="260" class="box-title">validation</text>
+        <text x="890" y="278" class="box-sub">size · MIME · magic</text>
+
+        <rect x="1012" y="222" width="132" height="68" rx="8" class="panel" fill="#13243f" stroke="#3a6b62" />
+        <text x="1026" y="244" class="box-title">lib/virus-scan</text>
+        <text x="1026" y="262" class="box-sub">VirusTotal</text>
+        <text x="1026" y="278" class="box-sub">(optional)</text>
+      </g>
+
+      <!-- DATA LAYER -->
+      <g>
+        <text x="860" y="340" class="grp-label">Data Layer</text>
+        <rect x="860" y="354" width="300" height="180" rx="12" class="panel data" />
+
+        <rect x="876" y="374" width="268" height="96" rx="8" class="panel" fill="#1e1733" stroke="#8660d1" />
+        <text x="890" y="396" class="box-title">PostgreSQL (eh_local_3.0)</text>
+        <text x="890" y="416" class="box-sub">hub_artifacts · hub_feedback</text>
+        <text x="890" y="432" class="box-sub">hub_share_links</text>
+        <text x="890" y="452" class="box-sub">enum hub_artifact_type</text>
+
+        <rect x="876" y="478" width="268" height="44" rx="8" class="panel" fill="#1e1733" stroke="#8660d1" />
+        <text x="890" y="500" class="box-title">UPLOAD_DIR (local fs)</text>
+        <text x="890" y="516" class="box-sub">uuid filenames; original kept in DB</text>
+      </g>
+
+      <!-- EXTERNAL -->
+      <g>
+        <text x="40" y="470" class="grp-label">External</text>
+        <rect x="40" y="484" width="220" height="56" rx="10" class="panel external" />
+        <text x="56" y="508" class="box-title">Anthropic API</text>
+        <text x="56" y="524" class="box-sub">ANTHROPIC_API_KEY</text>
+
+        <rect x="40" y="552" width="220" height="56" rx="10" class="panel external" />
+        <text x="56" y="576" class="box-title">VirusTotal API</text>
+        <text x="56" y="592" class="box-sub">VIRUSTOTAL_API_KEY (optional)</text>
+      </g>
+
+      <!-- DEPLOYMENT FOOTER -->
+      <g>
+        <rect x="40" y="650" width="1120" height="90" rx="12" class="panel" fill="#141a3a" stroke="#2a356a" />
+        <text x="60" y="676" class="grp-label">Deployment · Render</text>
+        <text x="60" y="700" class="box-sub">Build: <tspan fill="#e8ecff">npm install &amp;&amp; npm run build</tspan>     Start: <tspan fill="#e8ecff">npm start</tspan>     Memory cap: 512 MB (must run production; next dev OOMs)</text>
+        <text x="60" y="718" class="box-sub">Host: artifact-hub.onrender.com (whitelisted in next.config.ts · allowedDevOrigins)     Migrations: drizzle generate + migrate (never push)</text>
+      </g>
+
+      <!-- EDGES -->
+      <!-- Browser → Next.js pages -->
+      <path class="edge" d="M 260 92 C 285 92, 285 92, 310 92" marker-end="url(#arrow)" />
+      <text x="268" y="84" class="edge-lbl">HTTPS</text>
+
+      <!-- Browser → middleware via protected routes -->
+      <path class="edge" d="M 260 118 C 420 148, 520 110, 562 98" marker-end="url(#arrow)" />
+
+      <!-- MCP client → MCP server -->
+      <path class="edge" d="M 260 186 C 285 260, 285 340, 310 400" marker-end="url(#arrow)" />
+      <text x="266" y="268" class="edge-lbl">POST /mcp</text>
+
+      <!-- Share viewer → /share route -->
+      <path class="edge" d="M 260 270 C 290 250, 290 230, 326 214" marker-end="url(#arrow)" />
+
+      <!-- Google OAuth ↔ NextAuth -->
+      <path class="edge-2" d="M 260 390 C 300 300, 320 280, 340 248" marker-end="url(#arrow-dim)" marker-start="url(#arrow-dim)" />
+      <text x="272" y="340" class="edge-lbl">OAuth</text>
+
+      <!-- Next.js REST → lib/db/ai/storage -->
+      <path class="edge" d="M 794 200 C 830 160, 850 120, 876 96" marker-end="url(#arrow)" />
+      <path class="edge" d="M 794 214 C 830 180, 850 160, 876 142" marker-end="url(#arrow)" />
+      <path class="edge" d="M 794 228 C 830 210, 850 200, 876 192" marker-end="url(#arrow)" />
+      <path class="edge" d="M 794 244 C 830 240, 850 244, 876 250" marker-end="url(#arrow)" />
+      <path class="edge" d="M 794 258 C 830 260, 850 262, 1012 252" marker-end="url(#arrow)" />
+
+      <!-- MCP server → lib/db/ai/share (direct) -->
+      <path class="edge" d="M 794 438 C 830 380, 850 200, 876 104" marker-end="url(#arrow)" />
+      <text x="810" y="260" class="edge-lbl">db (direct)</text>
+      <path class="edge" d="M 794 460 C 830 360, 850 200, 876 150" marker-end="url(#arrow)" />
+
+      <!-- MCP server publish bridge → Next.js /api/artifacts -->
+      <path class="edge-warn" d="M 810 460 C 900 460, 900 300, 810 220" marker-end="url(#arrow-warn)" />
+      <text x="820" y="346" class="edge-lbl">x-api-key</text>
+
+      <!-- lib/db → Postgres -->
+      <path class="edge" d="M 1010 116 C 1040 220, 1040 320, 1010 380" marker-end="url(#arrow)" />
+      <text x="1050" y="252" class="edge-lbl">SQL</text>
+
+      <!-- lib/storage → Upload dir -->
+      <path class="edge" d="M 1010 216 C 1060 320, 1060 420, 1010 486" marker-end="url(#arrow)" />
+      <text x="1062" y="360" class="edge-lbl">fs</text>
+
+      <!-- lib/ai → Anthropic -->
+      <path class="edge-2" d="M 876 152 C 600 340, 400 440, 260 512" marker-end="url(#arrow-dim)" />
+      <text x="440" y="410" class="edge-lbl">HTTPS · AI</text>
+
+      <!-- lib/virus-scan → VirusTotal -->
+      <path class="edge-2" d="M 1020 290 C 760 420, 500 530, 260 580" marker-end="url(#arrow-dim)" />
+      <text x="500" y="510" class="edge-lbl">HTTPS · scan</text>
+
+      <!-- upload-path annotation: REST → file-validation → virus-scan → storage → db -->
+      <text x="326" y="304" class="edge-lbl">upload path: validate → scan → store → insert</text>
+    </svg>
+  </div>
+
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:#4c6ad6"></span><b>Services</b>Next.js app + MCP server. Separate processes, one codebase.</div>
+    <div class="item"><span class="swatch" style="background:#3a6b62"></span><b>Shared library</b>Imported directly by both services. Changes here affect both.</div>
+    <div class="item"><span class="swatch" style="background:#8660d1"></span><b>Data</b>Postgres (hub_* tables only) + filesystem under UPLOAD_DIR.</div>
+    <div class="item"><span class="swatch" style="background:#d18a5f"></span><b>External</b>Google OAuth, Anthropic API, VirusTotal (optional).</div>
+    <div class="item"><span class="swatch" style="background:#7c9cff"></span><b>Solid edge</b>In-process call or HTTP between own services.</div>
+    <div class="item"><span class="swatch" style="background:#5fd0c1"></span><b>Dashed teal</b>Outbound call to a third-party service.</div>
+    <div class="item"><span class="swatch" style="background:#f4b26a"></span><b>Dashed amber</b>MCP → REST bridge authenticated with ARTIFACT_HUB_API_KEY.</div>
+  </div>
+
+  <p class="foot">Source of truth: src/app, src/mcp-server, src/db, src/lib. Regenerate this diagram when routes, tools, or shared modules change.</p>
+</div>
+</body>
+</html>
