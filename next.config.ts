@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ["artifact-hub.onrender.com"],
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default nextConfig;
