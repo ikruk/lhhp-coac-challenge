@@ -1,5 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
+const PdfViewer = dynamic(
+  () => import("./PdfViewer").then((m) => m.PdfViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full border border-edge rounded-xl bg-panel py-16 text-center text-sm text-ink-faint">
+        Loading PDF viewer…
+      </div>
+    ),
+  }
+);
+
 interface ArtifactViewerProps {
   artifactId: string;
   type: string;
@@ -41,15 +55,7 @@ export function ArtifactViewer({
   }
 
   if (type === "pdf") {
-    return (
-      <div className="w-full border border-edge rounded-xl overflow-hidden">
-        <iframe
-          src={fileUrl}
-          title={title}
-          className="w-full h-[75vh] sm:h-[700px] border-0 bg-white block"
-        />
-      </div>
-    );
+    return <PdfViewer url={fileUrl} title={title} />;
   }
 
   return (
