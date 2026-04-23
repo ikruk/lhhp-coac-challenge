@@ -8,6 +8,7 @@ const PUBLIC_PREFIXES = [
   "/share/",
   "/faq",
   "/signin",
+  "/presentation.html",
   "/_next",
   "/favicon.ico",
 ];
