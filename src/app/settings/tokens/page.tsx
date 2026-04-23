@@ -136,8 +136,14 @@ export default function TokensPage() {
 {`{
   "mcpServers": {
     "artifact-hub": {
-      "url": "https://artifact-hub-mcp.onrender.com/mcp",
-      "headers": { "x-api-key": "${revealedToken}" }
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://artifact-hub-mcp.onrender.com/mcp",
+        "--header",
+        "x-api-key:${revealedToken}"
+      ]
     }
   }
 }`}
