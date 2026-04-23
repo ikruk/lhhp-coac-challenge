@@ -139,6 +139,7 @@ LLM outputs never block the write path. If the Anthropic API is down, publish st
 4. **Server-side HTML sanitization** (0.5 day). DOMPurify on ingest for `type=html` artifacts. Lets us drop `allow-scripts` from the iframe sandbox for user-submitted content.
 5. **Embeddings-based search** (1-2 days). Swap the `ILIKE` title/description search for a `pgvector` similarity search over artifact content, keep tag filter as a boolean clause. Much better discovery when the hub has hundreds of artifacts.
 6. **Real auth** (1-2 days). EntraID / Teams SSO, tie `author_email` to a verified identity claim, gate edit/delete to the original author.
+7. **Per-user API keys for MCP** (0.5 day). Today the MCP service shares one static `ARTIFACT_HUB_API_KEY` with the web service and trusts whatever `authorEmail` the MCP caller sends — demo-grade, and anyone with the shared key can publish as anyone. Next step: a `hub_api_keys` table (`user_email`, hashed key, label, created/last-used timestamps), a settings page where each signed-in user generates and revokes their own key, and a web-side middleware change so the key (not an `authorEmail` form field) determines the artifact's owner. Unblocks safe multi-tenant MCP use without waiting for full MCP-OAuth support in Claude Desktop.
 
 ## Walkthrough
 
