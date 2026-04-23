@@ -140,7 +140,7 @@ export default function ArtifactDetailPage({
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <Link
             href="/"
             className="text-sm text-ink-faint hover:text-ink-muted mb-2 inline-block"
@@ -210,26 +210,30 @@ export default function ArtifactDetailPage({
                   {actionError}
                 </div>
               )}
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-medium tracking-tight text-ink">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                <div className="min-w-0 w-full sm:flex-1">
+                  <h1 className="text-xl sm:text-2xl font-medium tracking-tight text-ink break-words">
                     {artifact.title}
                   </h1>
                   {artifact.description && (
-                    <p className="text-ink-muted mt-1">{artifact.description}</p>
+                    <p className="text-ink-muted mt-1 text-sm sm:text-base">
+                      {artifact.description}
+                    </p>
                   )}
-                  <div className="flex items-center gap-3 mt-2 text-sm text-ink-faint">
-                    <span>{artifact.authorEmail}</span>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs sm:text-sm text-ink-faint">
+                    <span className="truncate max-w-full">
+                      {artifact.authorEmail}
+                    </span>
                     <span className="text-ink-faint/60">•</span>
                     <span>{new Date(artifact.createdAt).toLocaleDateString()}</span>
                     <span className="text-ink-faint/60">•</span>
                     <span>{(artifact.fileSize / 1024).toFixed(1)} KB</span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 shrink-0 justify-end">
+                <div className="flex flex-wrap gap-2 shrink-0 sm:justify-end w-full sm:w-auto">
                   <button
                     onClick={startEdit}
-                    className="px-4 py-2 border border-edge bg-panel-raised/50 text-ink-muted hover:text-ink hover:bg-panel-raised text-sm rounded-lg transition-colors"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-edge bg-panel-raised/50 text-ink-muted hover:text-ink hover:bg-panel-raised text-sm rounded-lg transition-colors"
                   >
                     Edit
                   </button>
@@ -238,20 +242,20 @@ export default function ArtifactDetailPage({
                       setActionError(null);
                       setConfirmingDelete(true);
                     }}
-                    className="px-4 py-2 border border-bad/40 bg-bad/5 text-bad hover:bg-bad/15 text-sm rounded-lg transition-colors"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-bad/40 bg-bad/5 text-bad hover:bg-bad/15 text-sm rounded-lg transition-colors"
                   >
                     Delete
                   </button>
                   <button
                     onClick={() => setShowShare(true)}
-                    className="px-4 py-2 border border-edge bg-panel-raised/50 text-ink-muted hover:text-ink hover:bg-panel-raised text-sm rounded-lg transition-colors"
+                    className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-edge bg-panel-raised/50 text-ink-muted hover:text-ink hover:bg-panel-raised text-sm rounded-lg transition-colors"
                   >
                     Share
                   </button>
                   <a
                     href={`/api/artifacts/${artifact.id}/file`}
                     download={artifact.fileName}
-                    className="px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors"
+                    className="flex-1 sm:flex-none text-center px-3 sm:px-4 py-2 bg-accent text-canvas text-sm font-medium rounded-lg hover:bg-accent-strong transition-colors"
                   >
                     Download
                   </a>
@@ -275,7 +279,7 @@ export default function ArtifactDetailPage({
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         <ArtifactViewer
           artifactId={artifact.id}
           type={artifact.type}

@@ -72,18 +72,20 @@ export default function SharePage({
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-edge bg-canvas/70 backdrop-blur-md">
-        <div className="max-w-5xl mx-auto px-6 py-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <p className="text-xs uppercase tracking-wider text-accent/80 mb-1">
             Shared via Artifact Hub
           </p>
-          <h1 className="text-2xl font-medium tracking-tight text-ink">
+          <h1 className="text-xl sm:text-2xl font-medium tracking-tight text-ink break-words">
             {artifact.title}
           </h1>
           {artifact.description && (
-            <p className="text-ink-muted mt-1">{artifact.description}</p>
+            <p className="text-ink-muted mt-1 text-sm sm:text-base">
+              {artifact.description}
+            </p>
           )}
-          <div className="flex items-center gap-3 mt-2 text-sm text-ink-faint">
-            <span>{artifact.authorEmail}</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs sm:text-sm text-ink-faint">
+            <span className="truncate max-w-full">{artifact.authorEmail}</span>
             <span className="text-ink-faint/60">•</span>
             <span>{new Date(artifact.createdAt).toLocaleDateString()}</span>
           </div>
@@ -102,7 +104,7 @@ export default function SharePage({
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
         <ArtifactViewer
           artifactId={artifact.id}
           type={artifact.type}

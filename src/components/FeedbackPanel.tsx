@@ -74,7 +74,7 @@ export function FeedbackPanel({ artifactId }: FeedbackPanelProps) {
     "w-full px-3 py-2 bg-panel-raised border border-edge-strong rounded-lg text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-ring transition";
 
   return (
-    <div className="space-y-6 bg-panel border border-edge rounded-2xl p-6">
+    <div className="space-y-6 bg-panel border border-edge rounded-2xl p-4 sm:p-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-display font-medium text-ink">
           Feedback ({items.length})
@@ -149,13 +149,13 @@ export function FeedbackPanel({ artifactId }: FeedbackPanelProps) {
           className={`${inputClass} min-h-[80px]`}
           required
         />
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <select
             value={rating}
             onChange={(e) =>
               setRating(e.target.value ? parseInt(e.target.value) : "")
             }
-            className={inputClass + " max-w-[220px]"}
+            className={inputClass + " sm:max-w-[220px]"}
           >
             <option value="">Rating (optional)</option>
             <option value="1">1 - Poor</option>

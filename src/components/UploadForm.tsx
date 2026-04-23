@@ -68,7 +68,7 @@ export function UploadForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-5 max-w-xl bg-panel border border-edge rounded-2xl p-6"
+      className="space-y-5 max-w-xl bg-panel border border-edge rounded-2xl p-4 sm:p-6"
     >
       {error && (
         <div className="p-3 bg-bad/10 border border-bad/40 rounded-lg text-sm text-bad">
