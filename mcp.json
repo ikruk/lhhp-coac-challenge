@@ -1,7 +1,14 @@
 {
   "mcpServers": {
     "artifact-hub": {
-      "url": "https://artifact-hub-mcp.onrender.com/mcp"
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://artifact-hub-mcp.onrender.com/mcp",
+        "--header",
+        "x-api-key:ak_REPLACE_WITH_YOUR_TOKEN"
+      ]
     }
   }
 }
