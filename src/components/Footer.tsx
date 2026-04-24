@@ -15,6 +15,12 @@ export function Footer() {
           >
             FAQ
           </Link>
+          <Link
+            href="/releases"
+            className="text-ink-muted hover:text-ink transition-colors font-medium"
+          >
+            Releases
+          </Link>
           <a
             href="https://www.linkedin.com/in/ikruk"
             target="_blank"

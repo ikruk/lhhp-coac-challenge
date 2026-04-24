@@ -7,6 +7,7 @@ const PUBLIC_PREFIXES = [
   "/api/feedback",
   "/share/",
   "/faq",
+  "/releases",
   "/signin",
   "/presentation.html",
   "/_next",
