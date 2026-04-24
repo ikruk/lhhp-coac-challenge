@@ -5,25 +5,16 @@
 - **Public URL:** https://artifact-hub.onrender.com
 - **MCP endpoint:** https://artifact-hub-mcp.onrender.com/mcp
 - **Source (GitHub):** https://github.com/ikruk/lhhp-coac-challenge
+- **Presentation deck:** https://artifact-hub.onrender.com/presentation.html (11 slides, arrow / scroll / swipe)
+- **FAQ:** https://artifact-hub.onrender.com/faq
+- **Release notes:** https://artifact-hub.onrender.com/releases
+- **MCP config template:** [`mcp.json`](mcp.json) in repo root
 
 ### Claude Desktop MCP config
 
 1. Sign into https://artifact-hub.onrender.com with Google.
 2. Go to **Settings → Access tokens** (link in the header after sign-in, also at `/settings/tokens`). Click **Generate token**, give it a label (e.g. "MacBook Claude Desktop"), copy the raw value — it's shown once.
 3. Paste into `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) — the equivalent `%APPDATA%\Claude\` path on Windows, `~/.config/Claude/` on Linux:
-
-```json
-{
-  "mcpServers": {
-    "artifact-hub": {
-      "url": "https://artifact-hub-mcp.onrender.com/mcp",
-      "headers": { "x-api-key": "ak_xxx..." }
-    }
-  }
-}
-```
-
-If your Claude Desktop version is too old to accept `url`, use the `mcp-remote` bridge:
 
 ```json
 {
@@ -42,6 +33,19 @@ If your Claude Desktop version is too old to accept `url`, use the `mcp-remote` 
 }
 ```
 
+The `mcp-remote` bridge form is the broadest-compatibility shape. If your Claude Desktop version supports streamable HTTP MCP servers natively, this alternative also works:
+
+```json
+{
+  "mcpServers": {
+    "artifact-hub": {
+      "url": "https://artifact-hub-mcp.onrender.com/mcp",
+      "headers": { "x-api-key": "ak_xxx..." }
+    }
+  }
+}
+```
+
 Restart Claude Desktop. Seven tools become available: `publish_artifact`, `search_artifacts`, `get_artifact`, `add_feedback`, `summarize_feedback`, `create_share_link`, `list_my_artifacts` — all automatically scoped to the Google account the token was created under. No `authorEmail` argument anywhere; the token *is* the identity.
 
 ## What I Built and Why
@@ -55,8 +59,12 @@ Product decisions:
 - **Feedback lives inline with the artifact, not in a side channel** — reviews are in the DB, not in Slack/Teams threads that vanish. A "summarize feedback" button condenses long discussions into a paragraph on demand.
 - **Sharing via signed tokens with TTL + view cap** — no account system required for external reviewers. Links expire; optional hard cap on views.
 - **Google sign-in with strict per-user scoping** — the gallery, detail pages, and API responses are filtered to the signed-in user's email. Nothing of anyone else's is reachable without a share link.
+- **Artifact ownership flows through a unified auth helper.** Both the Google session cookie and a personal access token (for MCP) resolve to the same `email` in `getAuthedUser(req)`. Route handlers then scope every query by that email without caring which credential arrived.
 - **Every upload runs a three-layer check** — 10 MB cap, MIME/magic-byte/executable sniffing, and optional VirusTotal scan. Designed so the free tier is useful *and* a VT key can be added without code changes. See "Uploads & Security".
+- **Editable + deletable artifacts** — title, description, and tags are editable in place; delete is confirm-dialog-gated and cascades feedback + share links.
+- **Real previews in the gallery** — images show the image, HTML shows a strict-sandboxed live thumbnail (not just a globe emoji), PDFs get a dedicated pdf.js-based viewer on the detail page so they actually render on iOS/Android where iframe PDFs fail.
 - **MCP as a thin adapter, not a second implementation** — the publish path goes through the web service's REST API so there's one disk writer; the read tools hit shared Postgres directly so Claude Desktop and the web UI observe the same data.
+- **One landing page for the whole story.** `/signin` doubles as the welcome screen for unauthenticated visitors with hero copy, tech chips, product-decision cards, and links to the deck, FAQ, and source. Secondary documentation lives at `/faq` (user-facing) and `/releases` (changelog), both public.
 
 ## What I Chose Not to Build and Why
 
@@ -76,27 +84,28 @@ Two Render services over one data layer:
 │ artifact-hub            │          │ artifact-hub-mcp        │
 │ Next.js 16 App Router   │          │ Standalone MCP server   │
 │ UI + REST API           │◀─────────│ (Express + SDK)         │
-│ Google sign-in + API-key│  fetch   │ on write                │
-│ :10000  (Render PORT)   │──────────▶                         │
+│ Google session OR       │  fetch   │ Resolves x-api-key →    │
+│ x-api-key token         │  on      │ owner email             │
+│                         │  write   │                         │
 └──────────┬──────────────┘          └──────────┬──────────────┘
            │                                    │
            ▼                                    ▼
    ┌───────────────┐                  ┌─────────────────────┐
    │ Render disk   │                  │ Shared Postgres     │
    │ /var/data     │                  │ hub_* tables        │
-   │ (uploads)     │                  │ (direct reads from  │
-   │               │                  │  both services)     │
+   │ (uploads)     │                  │ (both services read)│
    └───────────────┘                  └─────────────────────┘
 ```
 
 Key pieces:
 
-- **Next.js App Router** — pages under `src/app/*/page.tsx`, REST endpoints under `src/app/api/*/route.ts`. Tailwind v4 with a semantic token palette (`canvas`/`panel`/`edge`/`ink`/`accent`) in `@theme`.
-- **Auth.js v5 (next-auth@beta)** — Google provider, JWT cookie sessions (no session DB tables). `middleware.ts` redirects unauthenticated browser traffic to a custom `/signin` welcome screen and returns `401` for unauthenticated API calls. Whitelisted public paths: `/api/auth`, `/api/share/:token`, `/api/feedback`, `/api/artifacts/:id/file`, `/share/:token`, `/faq`, `/signin`.
-- **MCP server** (`src/mcp-server/index.ts`) — a separate Node process running Express + `@modelcontextprotocol/sdk`'s stateless StreamableHTTP transport. Each POST to `/mcp` builds a fresh `McpServer` + transport pair (SDK requirement). For read-only tools it imports `db`, `lib/ai`, `lib/share` directly; the one write tool (`publish_artifact`) POSTs to `https://artifact-hub.onrender.com/api/artifacts` with an `x-api-key` header so the web service stays the sole owner of the uploads disk.
-- **Drizzle + postgres-js** — three tables, all prefixed `hub_` (`hub_artifacts`, `hub_feedback`, `hub_share_links`). `db/index.ts` returns a lazy Proxy singleton so the connection only opens on first use.
+- **Next.js App Router** — pages under `src/app/*/page.tsx`, REST endpoints under `src/app/api/*/route.ts`. Tailwind v4 with a semantic token palette (`canvas`/`panel`/`edge`/`ink`/`accent` + a secondary `accent-alt`) in `@theme`; the palette was lifted from the 11-slide overview deck (`public/presentation.html`) so the deck, app, FAQ, and release notes feel like one product.
+- **Auth.js v5 (next-auth@beta)** — Google provider, JWT cookie sessions (no session DB tables). `middleware.ts` redirects unauthenticated browser traffic to a custom `/signin` welcome screen and returns `401` for unauthenticated API calls. An `x-api-key` header lets the request through so the route handler can resolve the token against Postgres (Edge middleware can't do DB lookups). Whitelisted public paths: `/api/auth`, `/api/share/:token`, `/api/feedback`, `/api/artifacts/:id/file`, `/share/:token`, `/faq`, `/releases`, `/signin`, `/presentation.html`.
+- **MCP server** (`src/mcp-server/index.ts`) — a separate Node process running Express + `@modelcontextprotocol/sdk`'s stateless StreamableHTTP transport. Each POST to `/mcp` first resolves the caller's `x-api-key` to an owner email, then builds a fresh `McpServer` + transport pair (SDK requirement) with that owner baked into every tool closure. Read-only tools import `db`, `lib/ai`, `lib/share` directly; the one write tool (`publish_artifact`) POSTs to `https://artifact-hub.onrender.com/api/artifacts` forwarding the same `x-api-key` header so the web service identifies the same user and stays the sole owner of the uploads disk.
+- **Drizzle + postgres-js** — four tables, all prefixed `hub_` (`hub_artifacts`, `hub_feedback`, `hub_share_links`, `hub_api_keys`). `db/index.ts` returns a lazy Proxy singleton so the connection only opens on first use.
 - **Anthropic SDK** — Claude Sonnet for tag generation, description generation, and feedback summarization. AI calls wrapped in try/catch so an API hiccup never blocks a publish.
 - **Filesystem storage** — files written under `UPLOAD_DIR` (`/var/data` on Render) by uuid filename. The DB stores both the uuid (lookup key) and original filename (for `Content-Disposition: filename=...` on download).
+- **Previews** — `src/components/ArtifactViewer.tsx` picks the right renderer: HTML → sandboxed iframe (`allow-scripts allow-same-origin`); image → `<img object-contain>`; PDF → `src/components/PdfViewer.tsx` (pdf.js via `react-pdf`, dynamic-imported so the ~400 KB bundle stays off every other page); other → download button. Gallery cards pick the same way, using a strict-sandbox `sandbox=""` iframe at 25% scale for HTML thumbnails.
 
 Shared Postgres DB constraint: the local dev DB (`eh_local_3.0`) is shared with another project. `drizzle-kit push` doesn't handle that cleanly (tries to drop sequences it doesn't own), so the workflow is `db:generate` → review SQL → `db:migrate`, with the initial migration baselined in `drizzle.__drizzle_migrations`. Migrations are auto-applied on production via the `prestart` npm hook. See `CLAUDE.md` for details.
 
@@ -174,12 +183,14 @@ HTML artifacts render in a sandboxed iframe (`sandbox="allow-scripts allow-same-
    - Pick a file (e.g. an HTML mockup). Fill in title only. Leave description + tags empty.
    - Click **Publish Artifact** — the upload runs size + MIME + magic-byte + (optional) VirusTotal checks, then triggers two Anthropic calls in parallel (tags + description), then redirects to the artifact detail page.
    - Observe that the description and 3-6 tags were filled in automatically.
-4. **View an artifact** — the detail page renders HTML inline via sandboxed iframe; images render natively; PDFs render via iframe; other types show a download button.
+4. **View an artifact** — the detail page renders HTML inline via a sandboxed iframe; images render natively; PDFs render with pdf.js (every page visible in a scrollable column, works on iOS/Android where native iframe PDFs fail); other types fall back to a download button.
 5. **Leave feedback** — scroll to the feedback section. Submit 2-3 pieces of feedback (name, text, optional 1-5 rating).
 6. **Summarize feedback** — once ≥2 pieces exist, the **AI Summary** button appears. Click → Anthropic produces a 2-4 sentence summary highlighting consensus/disagreement/actionable points.
 7. **Share** — click **Share**, pick a TTL (default 48h), optionally a max-views cap. Open the returned link in an incognito tab to confirm the shared view works without a Google account.
 8. **Publish from Claude Desktop via MCP** — generate a personal access token at **Settings → Access tokens**, paste it into Claude Desktop's config under `headers.x-api-key` (see "Links"), restart. In a Claude Desktop chat: *"Using the artifact-hub MCP server, publish a short HTML greeting."* — Claude calls `publish_artifact`; the token identifies you, the web service enforces all three upload-check layers, returns the web URL, and the artifact appears in your gallery alongside the ones you uploaded from the browser.
 9. **Smoke-test the upload-validation pipeline** — upload a file containing the literal string `X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`. The request is rejected with "EICAR antivirus test pattern detected" even without a VT key. Also try renaming `cmd.exe` to `image.png` — the PE header check rejects it.
+10. **Edit + delete** — on any artifact you own, **Edit** swaps the header into an inline form for title / description / tags (saving bumps `updated_at` and re-renders without a reload); **Delete** opens a confirm dialog and cascades feedback + share links on success.
+11. **Explore the other pages** — [`/faq`](https://artifact-hub.onrender.com/faq) covers privacy + MCP tokens; [`/releases`](https://artifact-hub.onrender.com/releases) renders `RELEASE_NOTES.md` from the repo; [`/presentation.html`](https://artifact-hub.onrender.com/presentation.html) is the 11-slide deep-dive deck with trackpad/touch/keyboard navigation.
 
 ## Claude Code Session Logs
 
